@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f7a2e"><title>Pilzkarte Schweiz</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+html,body{height:100%;margin:0;font:15px/1.4 system-ui,sans-serif}
+#map{position:absolute;inset:0 0 46% 0}
+#panel{position:absolute;left:0;right:0;bottom:0;height:46%;overflow:auto;background:#fff;color:#22301c;padding:10px 14px calc(10px + env(safe-area-inset-bottom));box-sizing:border-box;box-shadow:0 -2px 8px #0003}
+.r{display:flex;justify-content:space-between;font-weight:600;margin-top:8px}
+.b{height:8px;background:#ddd;border-radius:4px;overflow:hidden}.b i{display:block;height:100%;background:#4f7a2e}
+select,button{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid #bbb;background:#f6f4ee;margin:2px 0}
+small{color:#667060}a{color:#4f7a2e}
+</style></head><body>
+<div id="map"></div>
+<div id="panel"><b>Tippe auf die Karte</b> <button id="loc">📍 Standort</button><br>
+<select id="hb"></select> <select id="fc"><option value=".34">Boden lehmig</option><option value=".27" selected>Boden mittel</option><option value=".20">Boden sandig</option></select>
+<div id="out"><small>Wähle den Baum vor Ort und tippe auf die Karte.</small></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+//LOGIC
+var H=["Fichte","Tanne","Buche","Eiche","Kiefer/Föhre","Lärche","Birke","Ahorn/Esche/Laubmisch","Erle/Auwald","Wiese/Waldrand/Obstgarten"];
+// Baumgewichte nach Sporensuche (Steinpilz exakt; andere Arten: voll=1, halb=.5, kaum=.1, nein=0)
+var S=[
+{n:"Steinpilz",h:[1,.6,.95,.85,.8,.2,.5,.35,0,0],rain:25,mode:"net",t:[12,15],tw:7,m1:[60,115],m2:[55,115],s:[6,8,11,12],a:[250,500,1700,2200]},
+{n:"Pfifferling",h:[1,.5,1,1,1,.1,.5,.1,0,0],rain:25,mode:"bal",t:[12,20],tw:7,m1:[65,115],m2:[60,115],s:[6,7,11,12],a:[250,500,1600,2000]},
+{n:"Marone",h:[1,.5,.5,.1,1,.1,.1,.1,0,0],rain:20,mode:"net",t:[9,15],tw:7,m1:[55,115],m2:[50,115],s:[7,9,11,12],a:[250,400,1300,1800]},
+{n:"Morchel",h:[.1,.1,.1,.5,.1,.1,.1,1,.8,.6],rain:15,mode:"net",t:[8,16],tw:14,m1:[60,120],m2:null,s:[3,4,6,6],a:[250,350,1300,1800]},
+{n:"Parasol",h:[.5,.5,.5,1,1,1,1,.5,.1,.6],rain:22,mode:"net",t:[13,19],tw:7,m1:[55,115],m2:[50,115],s:[6,9,11,12],a:[250,350,1300,1800]}];
+function lerp(p,x){if(x<=p[0][0])return p[0][1];for(var i=1;i<p.length;i++)if(x<=p[i][0])return p[i-1][1]+(p[i][1]-p[i-1][1])*(x-p[i-1][0])/(p[i][0]-p[i-1][0]);return p[p.length-1][1]}
+function avg(a){a=a.filter(function(v){return v!=null&&!isNaN(v)});return a.reduce(function(s,v){return s+v},0)/a.length}
+function trap(x,p){return x<=p[0]||x>=p[3]?0:x<p[1]?(x-p[0])/(p[1]-p[0]):x<=p[2]?1:(p[3]-x)/(p[3]-p[2])}
+function season(x,p){if(x<=p[0]||x>=p[3])return 0;return Math.max(.15,trap(x,p))}
+function fromApi(d){
+ var q=d.daily,h=d.hourly,D=q.time.length,n=h.time.length,E=n-24;
+ var P=function(k){return q.precipitation_sum[D-1-k]||0},ET=function(k){return q.et0_fao_evapotranspiration[D-1-k]||0};
+ var net=0,bal=0,k;for(k=4;k<=14;k++)net+=Math.max(0,P(k)-.5*ET(k));
+ for(k=1;k<=14;k++)bal+=P(k)-.5*ET(k);
+ var sl=function(a,x,y){return a.slice(E-x,E-y)},soil=function(days){var c=days*24;return(avg(sl(h.soil_temperature_6cm,c,0))+avg(sl(h.soil_temperature_18cm,c,0)))/2};
+ var tmin=[],tmax=[];for(k=1;k<=7;k++){tmin.push(q.temperature_2m_min[D-1-k]);tmax.push(q.temperature_2m_max[D-1-k])}
+ return{net:net,bal:bal,t7:soil(7),t14:soil(14),m1:avg(sl(h.soil_moisture_3_to_9cm,72,0)),m2:avg(sl(h.soil_moisture_9_to_27cm,72,0)),
+  tmin:Math.min.apply(null,tmin.filter(function(v){return v!=null})),tmax:avg(tmax),
+  snow:Math.max.apply(null,sl(h.snow_depth,24,0).map(function(v){return(v||0)*100})),vpd:avg(sl(h.vapour_pressure_deficit,48,0)),alt:d.elevation}}
+function score(w,hab,fc,m,day){
+ var x=m+(day-1)/31;
+ var fr=w.tmin<-4?.25:w.tmin<-1?.6:w.tmin<1?.85:1,he=w.tmax>30?.6:w.tmax>27?.85:1;
+ var env=fr*he*lerp([[1,1],[5,.5],[15,.15]],w.snow)*lerp([[.6,1],[1.6,.5]],w.vpd);
+ return S.map(function(s){
+  var r=lerp([[2,0],[.32*s.rain,.4],[s.rain,1]],s.mode=="bal"?w.bal:w.net);
+  var t=s.t,T=lerp([[t[0]-8,0],[t[0]-4,.35],[t[0]-2,.85],[t[0],1],[t[1],1],[t[1]+2,.75],[t[1]+5,.4],[t[1]+9,0]],s.tw==14?w.t14:w.t7);
+  var mf=function(v,b){return lerp([[b[0]-35,0],[b[0],1],[b[1],1],[b[1]+25,0]],v/fc*100)};
+  var M=s.m2?(mf(w.m1,s.m1)+mf(w.m2,s.m2))/2:mf(w.m1,s.m1);
+  var wx=(((r+T+M)/3)+Math.exp((Math.log(Math.max(r,.001))+Math.log(Math.max(T,.001))+Math.log(Math.max(M,.001)))/3))/2;
+  var A=trap(w.alt,s.a),Hb=s.h[hab],Se=season(x,s.s);
+  var F=[["Lebensraum",Hb],["Höhe",A],["Saison",Se],["Regen",r],["Bodentemperatur",T],["Bodenfeuchte",M],["Frost/Hitze/Schnee/Trockenheit",env]];
+  var mn=F.reduce(function(a,b){return b[1]<a[1]?b:a});
+  return{n:s.n,sc:Math.round(100*Hb*A*wx*env*Se),weak:mn[0],min:mn[1],f:{r:r,T:T,M:M,wx:wx}}
+ }).sort(function(a,b){return b.sc-a.sc})}
+//ENDLOGIC
+var $=function(i){return document.getElementById(i)};
+H.forEach(function(h,i){$("hb").add(new Option(h,i))});
+var map=L.map("map").setView([46.8,8.2],8),mk=null,last=null,W=null;
+L.tileLayer("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg",{maxZoom:18,attribution:"© swisstopo"}).addTo(map);
+function show(){
+ var d=new Date(),r=score(W,+$("hb").value,+$("fc").value,d.getMonth()+1,d.getDate());
+ $("out").innerHTML="<small>"+Math.round(W.alt)+" m · Nettoregen Tage 4–14: "+W.net.toFixed(0)+" mm · Boden "+W.t7.toFixed(1)+" °C · Feuchte "+(W.m1*100).toFixed(0)+" Vol.% · Tmin "+W.tmin.toFixed(0)+" °C</small>"+
+  r.map(function(x){return '<div class="r"><span>'+x.n+'</span><span>'+x.sc+'</span></div><div class="b"><i style="width:'+x.sc+'%"></i></div>'+
+   '<small>'+(x.min<.3?'Bremse: '+x.weak+' ('+x.min.toFixed(2)+')':'Wetter '+x.f.wx.toFixed(2)+' (Regen '+x.f.r.toFixed(2)+', Boden-°C '+x.f.T.toFixed(2)+', Feuchte '+x.f.M.toFixed(2)+')')+'</small>'}).join("")+
+  '<p><small>Schwellen nach <a href="https://sporensuche.de/blog/wann-wachsen-pilze/" target="_blank">Sporensuche</a> (für Deutschland, nicht für die Schweiz geprüft). Höhenfaktor, Bodenart und Kurvenform sind Näherungen. Echte Funde: <a href="https://swissfungi.wsl.ch" target="_blank">SwissFungi</a> · Wetter: Open-Meteo · Karte: © swisstopo</small></p>'}
+function analyse(lat,lng){
+ last=[lat,lng];if(mk)mk.setLatLng(last);else mk=L.marker(last).addTo(map);
+ $("out").innerHTML="<small>Lade Wetterdaten …</small>";
+ fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lng+"&past_days=14&forecast_days=1&timezone=auto"+
+  "&daily=precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,temperature_2m_min"+
+  "&hourly=soil_temperature_6cm,soil_temperature_18cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,vapour_pressure_deficit,snow_depth")
+ .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
+ .then(function(d){W=fromApi(d);show()}).catch(function(e){$("out").innerHTML="<small>Fehler: "+e.message+"</small>"})}
+map.on("click",function(e){analyse(e.latlng.lat,e.latlng.lng)});
+$("hb").onchange=$("fc").onchange=function(){if(W)show()};
+$("loc").onclick=function(){navigator.geolocation.getCurrentPosition(function(p){map.setView([p.coords.latitude,p.coords.longitude],12);analyse(p.coords.latitude,p.coords.longitude)},function(){$("out").innerHTML="<small>Standort nicht erlaubt. Tippe auf die Karte.</small>"})};
+</script></body></html>
