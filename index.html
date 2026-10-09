@@ -11,7 +11,7 @@ html,body{height:100%;margin:0;font:15px/1.4 system-ui,sans-serif}
 .b{height:8px;background:#ddd;border-radius:4px;overflow:hidden}.b i{display:block;height:100%;background:#4f7a2e}
 select,button{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid #bbb;background:#f6f4ee;margin:2px 0}
 small{color:#667060}table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-size:.8rem}td,th{padding:3px 2px;border:1px solid #fff}td:first-child{text-align:left;white-space:nowrap}tr.on td:first-child{font-weight:700}tr.on td{outline:2px solid #22301c;outline-offset:-2px}
-#info{position:fixed;inset:0;z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}[hidden]{display:none!important}h2,h3{margin:.9em 0 .2em}.cl{background:none;border:0;box-shadow:none;font-weight:700;color:#10200a;padding:0}.cl:before{display:none}li{margin:2px 0}a{color:#4f7a2e}
+#info{position:fixed;inset:0;z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}[hidden]{display:none!important}h2,h3{margin:.9em 0 .2em}.hm{image-rendering:pixelated}.cl{background:none;border:0;box-shadow:none;font-weight:700;color:#10200a;padding:0}.cl:before{display:none}li{margin:2px 0}a{color:#4f7a2e}
 </style></head><body>
 <div id="map"></div>
 <div id="panel"><b>Tippe auf die Karte</b> <button id="loc">📍 Standort</button> <button id="inf">ℹ️ Bedingungen</button><br>
@@ -70,7 +70,7 @@ function infoHtml(){
  S.map(function(s){
   var tr=H.map(function(x,i){return[x,s.h[i]]}).filter(function(x){return x[1]>=.5}).sort(function(a,b){return b[1]-a[1]}).map(function(x){return x[0]+" ("+f1(x[1])+")"}).join(", ");
   return '<h3>'+s.n+'</h3><ul><li>Saison: möglich '+mr(Math.floor(s.s[0]),Math.ceil(s.s[3])-1)+', Hauptzeit '+mr(s.s[1],s.s[2]-1)+'</li><li>Höhe: ideal '+s.a[1]+'–'+s.a[2]+' m (möglich '+s.a[0]+'–'+s.a[3]+' m)</li><li>Bodentemperatur (6/18 cm, '+(s.tw==14?'14-Tage':'Wochen')+'-Mittel): ideal '+s.t[0]+'–'+s.t[1]+' °C</li><li>'+(s.mode=="bal"?'Wasserbilanz der letzten 14 Tage':'Nettoregen der Tage 4–14')+': ab '+s.rain+' mm voll</li><li>Bodenfeuchte: ideal '+s.m1[0]+'–'+s.m1[1]+' % nFK (3–9 cm)'+(s.m2?', '+s.m2[0]+'–'+s.m2[1]+' % (9–27 cm)':'')+'</li><li>Bäume/Lebensraum (Gewicht): '+tr+'</li>'+(s.x?'<li>'+s.x+'</li>':'')+'</ul>'}).join("")+
- '<h2>Gut zu wissen</h2><ul><li>Baumgewichte: Steinpilz nach Sporensuche, übrige Arten gestuft (1 / 0,5 / 0,1). Höhenfaktor und Kurvenflanken sind Näherungen.</li><li>Schwellen stammen aus Deutschland (Sporensuche) und sind für die Schweiz nicht geprüft. Die Höhe verschiebt die Saison um bis zu 30 Tage (im Herbst früher in höheren Lagen, Andrew et al. 2018). Das ist nicht eingerechnet, die Bodentemperatur fängt es nur teilweise ab.</li><li>Prognose: Regen und Temperatur kommen wenn möglich vom MeteoSchweiz-Modell ICON (1–2 km, bis etwa 5 Tage), alles andere vom Standardmodell. Über 5 Tage hinaus bleibt jede Prognose unsicher.</li><li>Nadel-, Laub- und Mischwald sind Mittelwerte der Baumgewichte. Die Waldkarte (BAFU Waldmischungsgrad) zeigt, was vor Ort überwiegt.</li><li>Gute Gebiete: 7×7 Punkte über den Kartenausschnitt, ein Wert pro Zelle für den gewählten Tag. Wald und Exposition fliessen nicht ein, schalte darum die Waldkarte dazu.</li><li>Die Bewertung bestimmt keine Pilze. Nimm nur mit, was du sicher kennst, und nutze eine Pilzkontrolle (<a href="https://www.vapko.ch" target="_blank">VAPKO</a>). Kantonale Regeln beachten, z. B. Schonzeit in Graubünden vom 1. bis 10. jeden Monats.</li></ul><p><small>Quellen: <a href="https://sporensuche.de/blog/wann-wachsen-pilze/" target="_blank">Sporensuche</a> · <a href="https://swissfungi.wsl.ch" target="_blank">SwissFungi</a> · Open-Meteo · © swisstopo</small></p>'}
+ '<h2>Gut zu wissen</h2><ul><li>Baumgewichte: Steinpilz nach Sporensuche, übrige Arten gestuft (1 / 0,5 / 0,1). Höhenfaktor und Kurvenflanken sind Näherungen.</li><li>Schwellen stammen aus Deutschland (Sporensuche) und sind für die Schweiz nicht geprüft. Die Höhe verschiebt die Saison um bis zu 30 Tage (im Herbst früher in höheren Lagen, Andrew et al. 2018). Das ist nicht eingerechnet, die Bodentemperatur fängt es nur teilweise ab.</li><li>Prognose: Regen und Temperatur kommen wenn möglich vom MeteoSchweiz-Modell ICON (1–2 km, bis etwa 5 Tage), alles andere vom Standardmodell. Über 5 Tage hinaus bleibt jede Prognose unsicher.</li><li>Nadel-, Laub- und Mischwald sind Mittelwerte der Baumgewichte. Die Waldkarte (BAFU Waldmischungsgrad) zeigt, was vor Ort überwiegt.</li><li>Gute Gebiete: Das Wetter wird an 10×10 Punkten abgefragt (die Wettermodelle lösen ohnehin nur etwa 1–2 km auf) und auf ein Raster von 40×40 Zellen interpoliert. Pro Zelle zählen die Höhe aus dem 90-m-Höhenmodell (Temperaturen werden mit 0,65 °C pro 100 m angepasst) und der Waldanteil aus der BAFU-Karte (ab 50 % Wald voller Wert). Exposition und Baumart fliessen nicht ein. Tippe in die Karte für die Details eines Punktes.</li><li>Die Bewertung bestimmt keine Pilze. Nimm nur mit, was du sicher kennst, und nutze eine Pilzkontrolle (<a href="https://www.vapko.ch" target="_blank">VAPKO</a>). Kantonale Regeln beachten, z. B. Schonzeit in Graubünden vom 1. bis 10. jeden Monats.</li></ul><p><small>Quellen: Höhenmodell Copernicus GLO-90 via Open-Meteo · <a href="https://sporensuche.de/blog/wann-wachsen-pilze/" target="_blank">Sporensuche</a> · <a href="https://swissfungi.wsl.ch" target="_blank">SwissFungi</a> · Open-Meteo · © swisstopo</small></p>'}
 $("ib").innerHTML=infoHtml();$("inf").onclick=function(){$("info").hidden=false};$("cl").onclick=function(){$("info").hidden=true};
 var map=L.map("map").setView([46.8,8.2],8),mk=null,ci=null,DS=null,R=null,sel=0;
 L.tileLayer("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg",{maxZoom:18,attribution:"© swisstopo"}).addTo(map);
@@ -110,17 +110,35 @@ $("wl").onchange=function(){if(this.checked)wk.addTo(map);else map.removeLayer(w
 S.forEach(function(s,i){$("hs").add(new Option(s.n,i))});
 for(var q=0;q<=7;q++){var dd=new Date();dd.setDate(dd.getDate()+q);$("hd").add(new Option(q?dd.toLocaleDateString("de-CH",{weekday:"short",day:"numeric",month:"numeric"}):"Heute",q))}
 $("hc").onclick=function(){HL.clearLayers();$("hm").textContent=""};
+var G=40,C=10,OV=4,LAPSE=.0065,FLD=["net","bal","t7","t14","m1","m2","tmin","tmax","snow","vpd","alt"];
+function bil(g,u,v){u=Math.max(0,Math.min(C-1,u));v=Math.max(0,Math.min(C-1,v));var i=Math.min(C-2,Math.floor(u)),j=Math.min(C-2,Math.floor(v)),a=u-i,b=v-j;
+ return g[i*C+j]*(1-a)*(1-b)+g[i*C+j+1]*(1-a)*b+g[(i+1)*C+j]*a*(1-b)+g[(i+1)*C+j+1]*a*b}
+function elev(la,ln){var ch=[];for(var i=0;i<la.length;i+=100)ch.push(fetch("https://api.open-meteo.com/v1/elevation?latitude="+la.slice(i,i+100).join(",")+"&longitude="+ln.slice(i,i+100).join(",")).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){return j.elevation}));
+ return Promise.all(ch).then(function(a){return[].concat.apply([],a)}).catch(function(){return null})}
+function forest(b){return new Promise(function(res){var n=G*OV,im=new Image();im.crossOrigin="anonymous";
+ im.onload=function(){try{var c=document.createElement("canvas");c.width=c.height=n;var x=c.getContext("2d");x.drawImage(im,0,0);var d=x.getImageData(0,0,n,n).data,f=[],t=0,i,j,a,e,s;
+  for(i=0;i<G;i++)for(j=0;j<G;j++){s=0;for(a=0;a<OV;a++)for(e=0;e<OV;e++)if(d[((i*OV+a)*n+j*OV+e)*4+3]>40)s++;f.push(s/(OV*OV));t+=s}
+  var q=t/(n*n);res(q>.03&&q<.97?f:null)}catch(e){res(null)}};
+ im.onerror=function(){res(null)};
+ im.src="https://wms.geo.admin.ch/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ch.bafu.landesforstinventar-waldmischungsgrad&STYLES=&CRS=EPSG:4326&BBOX="+[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].join(",")+"&WIDTH="+n+"&HEIGHT="+n+"&FORMAT=image/png&TRANSPARENT=TRUE"})}
 $("hg").onclick=function(){
- if(map.getZoom()<9){$("hm").textContent="Näher heranzoomen (ab Zoom 9).";return}
- var b=map.getBounds(),N=7,pts=[],cells=[],dla=(b.getNorth()-b.getSouth())/N,dlo=(b.getEast()-b.getWest())/N;
- for(var i=0;i<N;i++)for(var j=0;j<N;j++){var s=b.getSouth()+i*dla,w=b.getWest()+j*dlo;pts.push([s+dla/2,w+dlo/2]);cells.push([[s,w],[s+dla,w+dlo]])}
- $("hm").textContent="Berechne …";
+ if(map.getZoom()<9){$("hm").textContent="Näher heranzoomen (ab Zoom 9, für feine Details ab 11).";return}
+ var b=map.getBounds(),N=b.getNorth(),S0=b.getSouth(),E=b.getEast(),W0=b.getWest(),pts=[],fl=[],fn=[],i,j;
+ for(i=0;i<C;i++)for(j=0;j<C;j++)pts.push([N-(i+.5)*(N-S0)/C,W0+(j+.5)*(E-W0)/C]);
+ for(i=0;i<G;i++)for(j=0;j<G;j++){fl.push(+(N-(i+.5)*(N-S0)/G).toFixed(4));fn.push(+(W0+(j+.5)*(E-W0)/G).toFixed(4))}
+ $("hm").textContent="Berechne …";var fp=forest(b),ep=elev(fl,fn);
  fetch(U(pts.map(function(p){return p[0]}),pts.map(function(p){return p[1]}))).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
  .then(function(j){var a=Array.isArray(j)?j:[j];if(a.length!=pts.length)throw new Error("Antwortformat unerwartet");return withIcon(a,pts)})
- .then(function(ds){HL.clearLayers();var t=+$("hd").value,sp=+$("hs").value,dt=new Date();dt.setDate(dt.getDate()+t);var n=0;
-  ds.forEach(function(d,i){var sc=score(fromApi(d,t),+$("hb").value,+$("fc").value,dt.getMonth()+1,dt.getDate())[sp].sc;if(sc<10)return;n++;
-   L.rectangle(cells[i],{interactive:false,stroke:false,fillColor:"hsl(95,60%,38%)",fillOpacity:Math.min(.75,.15+sc/130)}).bindTooltip(String(sc),{permanent:true,direction:"center",className:"cl"}).addTo(HL)});
-  $("hm").textContent=S[sp].n+", "+(t?dt.toLocaleDateString("de-CH",{weekday:"short",day:"numeric",month:"numeric"}):"heute")+": "+n+" von "+pts.length+" Zellen ≥10. "+icn()})
+ .then(function(ds){return Promise.all([ds,ep,fp])})
+ .then(function(r){var ds=r[0],el=r[1],fm=r[2],t=+$("hd").value,sp=+$("hs").value,dt=new Date(),n=0,FA={};dt.setDate(dt.getDate()+t);
+  var W=ds.map(function(d){return fromApi(d,t)});FLD.forEach(function(k){FA[k]=W.map(function(x){return x[k]})});
+  var cv=document.createElement("canvas");cv.width=cv.height=G;var cx=cv.getContext("2d"),im=cx.createImageData(G,G);
+  for(i=0;i<G;i++)for(j=0;j<G;j++){var k=i*G+j,u=(i+.5)*C/G-.5,v=(j+.5)*C/G-.5,w={};FLD.forEach(function(f){w[f]=bil(FA[f],u,v)});
+   var al=el&&el[k]!=null?el[k]:null;if(al!=null){var dT=-LAPSE*(al-w.alt);w.t7+=dT;w.t14+=dT;w.tmin+=dT;w.tmax+=dT;w.alt=al}
+   var s=score(w,+$("hb").value,+$("fc").value,dt.getMonth()+1,dt.getDate())[sp].sc;if(fm)s=Math.round(s*Math.min(1,fm[k]*2));
+   if(s>=10){n++;im.data.set([87,155,39,Math.round(255*Math.min(.8,.15+s/130))],k*4)}}
+  cx.putImageData(im,0,0);HL.clearLayers();L.imageOverlay(cv.toDataURL(),b,{interactive:false,className:"hm"}).addTo(HL);
+  $("hm").textContent=S[sp].n+", "+(t?dt.toLocaleDateString("de-CH",{weekday:"short",day:"numeric",month:"numeric"}):"heute")+": "+n+" von "+G*G+" Zellen ≥10 (dunkler = besser). Höhe: "+(el?"90-m-Modell":"nur interpoliert")+", Wald: "+(fm?"ja":"nicht verfügbar")+". "+icn()})
  .catch(function(e){$("hm").textContent="Fehler: "+(e.message||"Abfrage")})};
 map.on("click",function(e){analyse(e.latlng.lat,e.latlng.lng)});
 $("out").onclick=function(e){var tr=e.target.closest("tr");if(tr&&tr.dataset.t!=null&&R){sel=+tr.dataset.t;draw()}};
