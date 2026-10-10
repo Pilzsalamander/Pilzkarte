@@ -4,20 +4,42 @@
 <meta name="theme-color" content="#4f7a2e"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><title>Pilzkarte Schweiz</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-html,body{height:100%;margin:0;font:15px/1.4 system-ui,sans-serif}
-#map{position:absolute;inset:0 0 52% 0}
-#panel{position:absolute;left:0;right:0;bottom:0;height:52%;overflow:auto;background:#fff;color:#22301c;padding:10px 14px calc(10px + env(safe-area-inset-bottom));box-sizing:border-box;box-shadow:0 -2px 8px #0003}
+html,body{height:100%;margin:0;font:15px/1.4 system-ui,sans-serif;background:#e8e6dc}
+#map{position:absolute;inset:0}
+select,button{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid #c9c6b8;background:#f6f4ee;color:#22301c;margin:2px 0}
+.ib{width:46px;height:46px;border-radius:50%;border:0;background:#fff;box-shadow:0 1px 6px #0003;padding:0;display:flex;align-items:center;justify-content:center}
+.ib svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ib.s{width:34px;height:34px;box-shadow:none;background:#f0eee6}.ib.s svg{width:18px;height:18px}
+#tb{position:fixed;top:calc(env(safe-area-inset-top) + 12px);right:12px;z-index:1100;display:flex;flex-direction:column;gap:10px}
+#hm{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:12px;max-width:calc(100vw - 84px);z-index:1100;background:#fff;color:#22301c;border-radius:14px;padding:7px 11px;font-size:.8rem;box-shadow:0 1px 6px #0003}
+#hm:empty{display:none}
+.sh{position:fixed;left:0;right:0;bottom:0;z-index:1500;max-height:46vh;overflow:auto;background:#fff;color:#22301c;border-radius:18px 18px 0 0;box-shadow:0 -2px 14px #0003;padding:0 16px calc(16px + env(safe-area-inset-bottom));box-sizing:border-box}
+.sh.big{max-height:88vh}
+.sh header{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 0 8px;font-weight:600;cursor:pointer}
+.sh header:before{content:"";position:absolute;top:6px;left:50%;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#d5d2c6}
+.sh header span:last-child{display:flex;gap:8px}
+.sh select{width:100%}
+label{display:block;margin:10px 0 2px;font-size:.85rem;color:#667060}label.ck{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:.95rem;color:#22301c}
 .r{display:flex;justify-content:space-between;font-weight:600;margin-top:8px}
 .b{height:8px;background:#ddd;border-radius:4px;overflow:hidden}.b i{display:block;height:100%;background:#4f7a2e}
-select,button{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid #bbb;background:#f6f4ee;margin:2px 0}
-small{color:#667060}table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-size:.8rem}td,th{padding:3px 2px;border:1px solid #fff}td:first-child{text-align:left;white-space:nowrap}tr.on td:first-child{font-weight:700}tr.on td{outline:2px solid #22301c;outline-offset:-2px}
-#info,.ov{position:fixed;inset:0;z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}[hidden]{display:none!important}.ov{z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));inset:0}h2,h3{margin:.9em 0 .2em}.hm{image-rendering:pixelated}.cl{background:none;border:0;box-shadow:none;font-weight:700;color:#10200a;padding:0}.cl:before{display:none}li{margin:2px 0}a{color:#4f7a2e}
+small{color:#667060}a{color:#4f7a2e}
+table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-size:.8rem}td,th{padding:3px 2px;border:1px solid #fff}td:first-child{text-align:left;white-space:nowrap}tr.on td:first-child{font-weight:700}tr.on td{outline:2px solid #22301c;outline-offset:-2px}
+#info,.ov{position:fixed;inset:0;z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}
+[hidden]{display:none!important}h2,h3{margin:.9em 0 .2em}li{margin:2px 0}.hm{image-rendering:pixelated}
 </style></head><body>
-<div id="map"></div>
-<div id="panel"><b>Tippe auf die Karte</b> <button id="loc">📍 Standort</button> <button id="inf">ℹ️ Bedingungen</button><br>
-<select id="hb"></select> <select id="fc"><option value=".34">Boden lehmig</option><option value=".27" selected>Boden mittel</option><option value=".20">Boden sandig</option></select>
-<br><label><input type="checkbox" id="wl"> 🌲 Waldkarte</label> <select id="hs"></select> <select id="hd"></select> <button id="hg">🗺️ Gute Gebiete</button> <button id="hc">✕</button> <small id="hm"></small><br><label><input type="checkbox" id="ex" checked> ⛰️ Exposition</label> <button id="vg">📈 Verlauf</button> <button id="lg">📓 Fundlog</button> <button id="bs">🎯 Beste Stellen</button>
-<div id="out"><small>Wähle den Baum vor Ort und tippe auf die Karte.</small></div><div id="cht"></div></div>
+<div id="map"></div><div id="hm"></div>
+<div id="tb"><button class="ib" id="loc" title="Mein Standort" aria-label="Mein Standort"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button><button class="ib" id="tg" title="Gute Gebiete" aria-label="Gute Gebiete"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button><button class="ib" id="bs" title="Beste Stellen" aria-label="Beste Stellen"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button><button class="ib" id="lg" title="Fundlog" aria-label="Fundlog"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></svg></button><button class="ib" id="ts" title="Einstellungen" aria-label="Einstellungen"><svg viewBox="0 0 24 24"><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></svg></button><button class="ib" id="inf" title="Bedingungen" aria-label="Bedingungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button></div>
+<section id="panel" class="sh" hidden><header><span>Pilze am Standort</span><span><button id="vg" class="ib s" title="Verlauf" aria-label="Verlauf"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 15l4-4 3 3 5-6"/></svg></button><button id="pc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header><div id="out"></div><div id="cht"></div></section>
+<section id="set" class="sh" hidden><header><span>Einstellungen</span><span><button id="sc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header>
+<label for="hb">Lebensraum / Baumart</label><select id="hb"></select>
+<label for="fc">Bodenart</label><select id="fc"><option value=".34">lehmig</option><option value=".27" selected>mittel</option><option value=".20">sandig</option></select>
+<label class="ck"><input type="checkbox" id="ex" checked> Exposition und Hang einrechnen</label>
+<label class="ck"><input type="checkbox" id="wl"> Waldkarte (BAFU) einblenden</label>
+<small>Gilt für Standort-Info, Gebiete und Beste Stellen.</small></section>
+<section id="gb" class="sh" hidden><header><span>Gute Gebiete</span><span><button id="gc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header>
+<label for="hs">Art</label><select id="hs"></select><label for="hd">Tag</label><select id="hd"></select>
+<p><button id="hg">Karte berechnen</button> <button id="hc">Leeren</button></p>
+<small>Rechnet den sichtbaren Ausschnitt (ab Zoom 9, am feinsten ab 11). Dunkelgrün = bessere Bedingungen. Tippe danach auf einen Punkt für Details.</small></section>
 <div id="flog" class="ov" hidden><button id="lc">✕ Schliessen</button><div id="fb"></div></div><div id="best" class="ov" hidden><button id="bc">✕ Schliessen</button><div id="bb"></div></div>
 <div id="info" hidden><button id="cl">✕ Schliessen</button><div id="ib"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -76,12 +98,12 @@ function infoHtml(){
   return '<h3>'+s.n+'</h3><ul><li>Saison: möglich '+mr(Math.floor(s.s[0]),Math.ceil(s.s[3])-1)+', Hauptzeit '+mr(s.s[1],s.s[2]-1)+'</li><li>Höhe: ideal '+s.a[1]+'–'+s.a[2]+' m (möglich '+s.a[0]+'–'+s.a[3]+' m)</li><li>Bodentemperatur (6/18 cm, '+(s.tw==14?'14-Tage':'Wochen')+'-Mittel): ideal '+s.t[0]+'–'+s.t[1]+' °C</li><li>'+(s.mode=="bal"?'Wasserbilanz der letzten 14 Tage':'Nettoregen der Tage 4–14')+': ab '+s.rain+' mm voll</li><li>Bodenfeuchte: ideal '+s.m1[0]+'–'+s.m1[1]+' % nFK (3–9 cm)'+(s.m2?', '+s.m2[0]+'–'+s.m2[1]+' % (9–27 cm)':'')+'</li><li>Bäume/Lebensraum (Gewicht): '+tr+'</li>'+(s.x?'<li>'+s.x+'</li>':'')+'</ul>'}).join("")+
  '<h2>Gut zu wissen</h2><ul><li>Baumgewichte: Steinpilz nach Sporensuche, übrige Arten gestuft (1 / 0,5 / 0,1). Höhenfaktor und Kurvenflanken sind Näherungen.</li><li>Schwellen stammen aus Deutschland (Sporensuche) und sind für die Schweiz nicht geprüft. Die Höhe verschiebt die Saison um bis zu 30 Tage (im Herbst früher in höheren Lagen, Andrew et al. 2018). Das ist nicht eingerechnet, die Bodentemperatur fängt es nur teilweise ab.</li><li>Prognose: Regen und Temperatur kommen wenn möglich vom MeteoSchweiz-Modell ICON (1–2 km, bis etwa 5 Tage), alles andere vom Standardmodell. Über 5 Tage hinaus bleibt jede Prognose unsicher.</li><li>Exposition und Hangneigung (eigene Annahmen, nicht aus Studien): Nordhänge haben +12 % Bodenfeuchte und sind 1 °C kühler, Südhänge umgekehrt (voll ab 25° Neigung). Ab 25° Neigung sinkt der Wert (40° ×0,6, 55° ×0,3). Das Fundlog soll das später prüfen. Hang aus dem 90-m-Höhenmodell.</li><li>Nadel-, Laub- und Mischwald sind Mittelwerte der Baumgewichte. Die Waldkarte (BAFU Waldmischungsgrad) zeigt, was vor Ort überwiegt.</li><li>Gute Gebiete: Das Wetter wird an 10×10 Punkten abgefragt (die Wettermodelle lösen ohnehin nur etwa 1–2 km auf) und auf ein Raster von 40×40 Zellen interpoliert. Pro Zelle zählen die Höhe aus dem 90-m-Höhenmodell (Temperaturen werden mit 0,65 °C pro 100 m angepasst) und der Waldanteil aus der BAFU-Karte (ab 50 % Wald voller Wert). Exposition und Baumart fliessen nicht ein. Tippe in die Karte für die Details eines Punktes.</li><li>Die Bewertung bestimmt keine Pilze. Nimm nur mit, was du sicher kennst, und nutze eine Pilzkontrolle (<a href="https://www.vapko.ch" target="_blank">VAPKO</a>). Kantonale Regeln beachten, z. B. Schonzeit in Graubünden vom 1. bis 10. jeden Monats.</li></ul><p><small>Quellen: Höhenmodell Copernicus GLO-90 via Open-Meteo · <a href="https://sporensuche.de/blog/wann-wachsen-pilze/" target="_blank">Sporensuche</a> · <a href="https://swissfungi.wsl.ch" target="_blank">SwissFungi</a> · Open-Meteo · © swisstopo</small></p>'}
 $("ib").innerHTML=infoHtml();$("inf").onclick=function(){$("info").hidden=false};$("cl").onclick=function(){$("info").hidden=true};
-var map=L.map("map").setView([46.8,8.2],8),mk=null,ci=null,DS=null,R=null,sel=0;
+var map=L.map("map",{zoomControl:false}).setView([46.8,8.2],8),mk=null,ci=null,DS=null,R=null,sel=0;
 L.tileLayer("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg",{maxZoom:18,attribution:"© swisstopo"}).addTo(map);
 function compute(){
  R=[];for(var t=0;t<=7;t++){var dt=new Date();dt.setDate(dt.getDate()+t);
   R.push({dt:dt,w:fromApi(DS[0],t),per:DS.map(function(d,i){return score(Object.assign(fromApi(d,t),SA&&SA[i]||{}),+$("hb").value,+$("fc").value,dt.getMonth()+1,dt.getDate())})})}
- draw();showChart()}
+ draw();showChart();pop()}
 function A(t,i){var v=R[t].per.map(function(p){return p[i].sc});return{a:Math.round(avg(v)),lo:Math.min.apply(null,v),hi:Math.max.apply(null,v)}}
 function draw(){
  var r=R[sel],w=r.w,al=DS.map(function(d){return d.elevation});
@@ -93,7 +115,7 @@ function draw(){
   ord.map(function(i){var x=r.per[0][i],a=A(sel,i);return'<div class="r"><span>'+x.n+'</span><span>'+a.a+(a.lo!=a.hi?' <small>('+a.lo+'–'+a.hi+')</small>':'')+'</span></div><div class="b"><i style="width:'+a.a+'%"></i></div><small>'+(x.min<.3?'Bremse: '+x.weak+' ('+x.min.toFixed(2)+')':'Wetter '+x.f.wx.toFixed(2)+' (Regen '+x.f.r.toFixed(2)+', Boden-°C '+x.f.T.toFixed(2)+', Feuchte '+x.f.M.toFixed(2)+')')+'</small>'}).join("")+
   '<p><small>Schwellen nach <a href="https://sporensuche.de/blog/wann-wachsen-pilze/" target="_blank">Sporensuche</a> (Deutschland, für die Schweiz nicht geprüft). Prognose = Modellwetter, unsicher. Funde: <a href="https://swissfungi.wsl.ch" target="_blank">SwissFungi</a> · Wetter: Open-Meteo · © swisstopo</small></p>'}
 function analyse(lat,lng){
- LP=[lat,lng];SA=null;var c=[lat,lng];if(mk)mk.setLatLng(c);else mk=L.marker(c).addTo(map);
+ LP=[lat,lng];SA=null;$("panel").hidden=false;$("set").hidden=true;$("gb").hidden=true;if($("hm").textContent=="Tippe auf die Karte")$("hm").textContent="";var c=[lat,lng];if(mk)mk.setLatLng(c);else mk=L.marker(c).addTo(map);panDown(c);
  if(ci)ci.setLatLng(c);else ci=L.circle(c,{radius:1000,color:"#4f7a2e",weight:2,fillOpacity:.1}).addTo(map);
  $("out").innerHTML="<small>Lade Wetterdaten …</small>";
  var dl=1/111.32,dg=dl/Math.cos(lat*Math.PI/180),pts=[[lat,lng],[lat+dl,lng],[lat,lng+dg],[lat-dl,lng],[lat,lng-dg]];
@@ -149,7 +171,13 @@ $("hg").onclick=function(){
  .catch(function(e){$("hm").textContent="Fehler: "+(e.message||"Abfrage")})};
 ["hs","hd"].forEach(function(id){$(id).addEventListener("change",function(){if(HC)heatDraw()})});
 
-var LP=null,SA=null,CH=false,HCb={},BD=null;
+$("hm").textContent="Tippe auf die Karte";
+function panDown(c){var p=map.latLngToContainerPoint(c);if(p.y>innerHeight*.5)map.panBy([0,p.y-innerHeight*.28])}
+function pop(){if(!mk||!R)return;var t=S.map(function(s,i){return[s.n,A(0,i).a]}).sort(function(a,b){return b[1]-a[1]}).slice(0,3).map(function(x){return x[0]+" "+x[1]}).join(" · ");mk.bindPopup("<b>Heute</b><br>"+t,{closeButton:false,autoPan:false}).openPopup()}
+function tog(id){var o=!$(id).hidden;["gb","set"].forEach(function(x){$(x).hidden=true});$("panel").hidden=true;if(!o)$(id).hidden=false;else if(id=="set"&&DS)$("panel").hidden=false}
+$("tg").onclick=$("gc").onclick=function(){tog("gb")};$("ts").onclick=$("sc").onclick=function(){tog("set")};$("pc").onclick=function(){$("panel").hidden=true};
+document.querySelectorAll(".sh header").forEach(function(h){h.onclick=function(e){if(!e.target.closest("button"))h.parentNode.classList.toggle("big")}});
+var LP=null,SA=null,CH=false,HCb={},BD=null,BCk=null,BCds=null;
 function showChart(){$("cht").innerHTML=CH&&DS?chart(DS[0]):""}
 function chart(d){var P=d.daily.precipitation_sum,n=P.length,T=[],k,i;for(k=0;k<n;k++){var s=0,c=0;for(i=k*24;i<k*24+24;i++){var v=d.hourly.soil_temperature_6cm[i];if(v!=null){s+=v;c++}}T.push(c?s/c:null)}
  var mx=Math.max.apply(null,P.map(function(v){return v||0}).concat([5])),tv=T.filter(function(v){return v!=null}),t0=Math.min.apply(null,tv),t1=Math.max.apply(null,tv),W=340,bw=W/n,X=function(i){return i*bw+bw/2},Y=function(v){return 10+110*(1-(v-t0)/Math.max(1,t1-t0))};
@@ -162,7 +190,7 @@ var LG=L.layerGroup().addTo(map);
 function LS(){try{return JSON.parse(localStorage.getItem("pilzlog")||"[]")}catch(e){return[]}}
 function SV(a){try{localStorage.setItem("pilzlog",JSON.stringify(a))}catch(e){}}
 function logHtml(){var a=LS().slice().reverse(),f=a.filter(function(x){return x.res=="gefunden"&&x.sc!=null}),g=a.filter(function(x){return x.res!="gefunden"&&x.sc!=null}),m=function(l){return l.length?Math.round(avg(l.map(function(x){return x.sc}))):"–"};
- return'<h2>📓 Fundlog</h2><p><small>Speichert nur auf diesem Gerät. Gespeichert wird am zuletzt angetippten Punkt, bei Datum heute mit dem Modellwert. Trage auch «nichts gefunden» ein, das macht die Prüfung aussagekräftig.</small></p><p><select id="la">'+S.map(function(s){return'<option>'+s.n+'</option>'}).join("")+'<option>andere</option></select> <select id="lr"><option>gefunden</option><option>nichts gefunden</option></select> <input type="date" id="ld" value="'+new Date().toISOString().slice(0,10)+'"><br><input id="ln" placeholder="Notiz (Menge, Baum …)" style="width:100%;box-sizing:border-box;margin:4px 0"><button id="ls">Am markierten Punkt speichern</button> <button id="lx">CSV</button> <button id="lm">Auf Karte</button></p><p id="lt"><small>'+(a.length?'Modellwert: gefunden Ø '+m(f)+' (n='+f.length+'), nichts gefunden Ø '+m(g)+' (n='+g.length+')':'Noch keine Einträge.')+'</small></p>'+
+ return'<h2>Fundlog</h2><p><small>Speichert nur auf diesem Gerät. Gespeichert wird am zuletzt angetippten Punkt, bei Datum heute mit dem Modellwert. Trage auch «nichts gefunden» ein, das macht die Prüfung aussagekräftig.</small></p><p><select id="la">'+S.map(function(s){return'<option>'+s.n+'</option>'}).join("")+'<option>andere</option></select> <select id="lr"><option>gefunden</option><option>nichts gefunden</option></select> <input type="date" id="ld" value="'+new Date().toISOString().slice(0,10)+'"><br><input id="ln" placeholder="Notiz (Menge, Baum …)" style="width:100%;box-sizing:border-box;margin:4px 0"><button id="ls">Am markierten Punkt speichern</button> <button id="lx">CSV</button> <button id="lm">Auf Karte</button></p><p id="lt"><small>'+(a.length?'Modellwert: gefunden Ø '+m(f)+' (n='+f.length+'), nichts gefunden Ø '+m(g)+' (n='+g.length+')':'Noch keine Einträge.')+'</small></p>'+
  a.map(function(x){return'<p>'+x.d+' · '+x.art+' · '+x.res+(x.sc!=null?' · Modell '+x.sc:'')+' · '+x.lat.toFixed(3)+', '+x.lng.toFixed(3)+(x.n?' · '+x.n:'')+' <button data-d="'+x.id+'">✕</button></p>'}).join("")}
 $("lg").onclick=function(){$("fb").innerHTML=logHtml();$("flog").hidden=false};$("lc").onclick=function(){$("flog").hidden=true};
 $("flog").onclick=function(e){var id=e.target.id,a=LS();
@@ -177,20 +205,21 @@ function forestAt(la,ln){return new Promise(function(res){var im=new Image(),d=.
  im.onload=function(){try{var c=document.createElement("canvas");c.width=c.height=24;var x=c.getContext("2d");x.drawImage(im,0,0);var D=x.getImageData(0,0,24,24).data,s=0;for(var i=0;i<576;i++)if(D[i*4+3]>40)s++;res(s/576)}catch(er){res(null)}};im.onerror=function(){res(null)};
  im.src="https://wms.geo.admin.ch/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=ch.bafu.landesforstinventar-waldmischungsgrad&STYLES=&CRS=EPSG:4326&BBOX="+[la-d,ln-e,la+d,ln+e].join(",")+"&WIDTH=24&HEIGHT=24&FORMAT=image/png&TRANSPARENT=TRUE"})}
 $("bc").onclick=function(){$("best").hidden=true};
-$("bs").onclick=function(){$("best").hidden=false;if(!LP){$("bb").innerHTML="<p>Tippe zuerst auf die Karte (oder nutze 📍 Standort) und öffne dies dann nochmal.</p>";return}bestRun(LP)};
+$("bs").onclick=function(){$("best").hidden=false;if(!LP){$("bb").innerHTML="<p>Tippe zuerst auf die Karte (oder nutze den Standort-Button) und öffne dies dann nochmal.</p>";return}bestRun(LP)};
 function bestRun(o){var P=[[o[0],o[1],0,0]];[[5,6],[10,8],[25,8],[50,10],[75,8],[100,10],[125,8],[150,12]].forEach(function(c){for(var k=0;k<c[1];k++){var a=2*Math.PI*k/c[1]+c[0]*.37;P.push([o[0]+c[0]*Math.cos(a)/110.54,o[1]+c[0]*Math.sin(a)/(111.32*Math.cos(o[0]*Math.PI/180)),c[0],a])}});
- $("bb").innerHTML="<h2>🎯 Beste Stellen</h2><p>Lade Wetter für "+P.length+" Punkte …</p>";
- jf(U(P.map(function(p){return p[0].toFixed(4)}),P.map(function(p){return p[1].toFixed(4)}))).then(function(j){var ds=Array.isArray(j)?j:[j];if(ds.length!=P.length)throw new Error("Antwortformat unerwartet");
-  var fc=+$("fc").value,sc=P.map(function(p,i){var r=[];for(var t=0;t<=7;t++){var dt=new Date();dt.setDate(dt.getDate()+t);r.push(score(fromApi(ds[i],t),12,fc,dt.getMonth()+1,dt.getDate())[0].sc)}return r}),
+ $("bb").innerHTML="<h2>Beste Stellen</h2><p>Lade Wetter für "+P.length+" Punkte …</p>";
+ var key=o[0].toFixed(3)+","+o[1].toFixed(3);
+ (BCk==key?Promise.resolve(BCds):jf(U(P.map(function(p){return p[0].toFixed(4)}),P.map(function(p){return p[1].toFixed(4)}))).then(function(j){var a=Array.isArray(j)?j:[j];if(a.length!=P.length)throw new Error("Antwortformat unerwartet");BCk=key;BCds=a;return a})).then(function(ds){
+  var fc=+$("fc").value,sc=P.map(function(p,i){var r=[];for(var t=0;t<=7;t++){var dt=new Date();dt.setDate(dt.getDate()+t);r.push(score(fromApi(ds[i],t),+$("hb").value,fc,dt.getMonth()+1,dt.getDate())[0].sc)}return r}),
   mxs=sc.map(function(r){return Math.max.apply(null,r)}),ord=P.map(function(p,i){return i}).filter(function(i){return mxs[i]>=20}).sort(function(a,b){return mxs[b]-mxs[a]}).slice(0,40);
-  $("bb").innerHTML="<h2>🎯 Beste Stellen</h2><p>Prüfe Waldanteil an "+ord.length+" Stellen …</p>";
+  $("bb").innerHTML="<h2>Beste Stellen</h2><p>Prüfe Waldanteil an "+ord.length+" Stellen …</p>";
   return Promise.all(ord.map(function(i){return forestAt(P[i][0],P[i][1])})).then(function(fr){
    var ok=fr.length&&fr.every(function(f){return f!=null})&&!fr.every(function(f){return f==fr[0]}),FM={};ord.forEach(function(i,k){FM[i]=ok?fr[k]:1});
    var M=[10,50,100,150].map(function(km){var r=[];for(var t=0;t<=7;t++){var b={v:0,i:-1};ord.forEach(function(i){if(P[i][2]<=km){var v=Math.round(sc[i][t]*Math.min(1,2*FM[i]));if(v>b.v){b={v:v,i:i}}}});r.push(b)}return r});
-   BD={P:P,ds:ds,M:M,FM:FM,ok:ok};bestDraw(0,0)})}).catch(function(e){$("bb").innerHTML="<h2>🎯 Beste Stellen</h2><p>Fehler: "+(e.message||"Abfrage")+"</p>"})}
+   BD={P:P,ds:ds,M:M,FM:FM,ok:ok};bestDraw(0,0)})}).catch(function(e){$("bb").innerHTML="<h2>Beste Stellen</h2><p>Fehler: "+(e.message||"Abfrage")+"</p>"})}
 function bestDraw(r,t){var B=BD,km=[10,50,100,150],hd=['<th></th>'];for(var q=0;q<=7;q++){var d=new Date();d.setDate(d.getDate()+q);hd.push('<th>'+(q?d.toLocaleDateString("de-CH",{weekday:"short",day:"numeric"}):"Heute")+'</th>')}
  var tb='<table><tr>'+hd.join("")+'</tr>'+B.M.map(function(row,ri){return'<tr><td>bis '+km[ri]+' km</td>'+row.map(function(c,ti){return'<td data-r="'+ri+'" data-t="'+ti+'" style="background:hsl(95 45% '+(96-.34*c.v)+'%)'+(ri==r&&ti==t?';outline:2px solid #22301c':'')+'">'+c.v+'</td>'}).join("")+'</tr>'}).join("")+'</table>',c=B.M[r][t],p=c.i>=0?B.P[c.i]:null,dd=new Date();dd.setDate(dd.getDate()+t);
- $("bb").innerHTML='<h2>🎯 Beste Stellen</h2><p><small>Steinpilz im Mischwald, bester Wert pro Radius und Tag. Tippe auf eine Zelle.</small></p>'+tb+(p?'<p><b>'+dd.toLocaleDateString("de-CH",{weekday:"long",day:"numeric",month:"numeric"})+', bis '+km[r]+' km: Wert '+c.v+'</b><br>'+(p[2]?Math.round(p[2])+' km nach '+dn(p[3]*180/Math.PI%360):'am Standort')+', '+Math.round(B.ds[c.i].elevation)+' m, Wald '+(B.ok?Math.round(B.FM[c.i]*100)+' %':'nicht geprüft')+'<br><button id="bg" data-i="'+c.i+'">→ auf Karte zeigen</button></p>':'<p>Keine Stelle mit Wert ≥ 10.</p>')+'<p><small>'+B.P.length+' Wetterpunkte (Abstand zwischen den Punkten wächst mit der Entfernung, gute Stellen dazwischen können fehlen). Waldanteil nur für die 40 besten Punkte geprüft. Baumart/Hang nicht berücksichtigt.</small></p>'}
+ $("bb").innerHTML='<h2>Beste Stellen</h2><p><small>Steinpilz, Lebensraum: '+H[+$("hb").value]+', bester Wert pro Radius und Tag. Tippe auf eine Zelle.</small></p>'+tb+(p?'<p><b>'+dd.toLocaleDateString("de-CH",{weekday:"long",day:"numeric",month:"numeric"})+', bis '+km[r]+' km: Wert '+c.v+'</b><br>'+(p[2]?Math.round(p[2])+' km nach '+dn(p[3]*180/Math.PI%360):'am Standort')+', '+Math.round(B.ds[c.i].elevation)+' m, Wald '+(B.ok?Math.round(B.FM[c.i]*100)+' %':'nicht geprüft')+'<br><button id="bg" data-i="'+c.i+'">→ auf Karte zeigen</button></p>':'<p>Keine Stelle mit Wert ≥ 10.</p>')+'<p><small>'+B.P.length+' Wetterpunkte (Abstand zwischen den Punkten wächst mit der Entfernung, gute Stellen dazwischen können fehlen). Waldanteil nur für die 40 besten Punkte geprüft. Hang nicht berücksichtigt. Der Lebensraum (Baumart) gilt für alle Orte gleich, er verschiebt die Werte, nicht die Rangfolge der Stellen.</small></p>'}
 $("bb").onclick=function(e){var td=e.target.closest("td");if(td&&td.dataset.t!=null&&BD){bestDraw(+td.dataset.r,+td.dataset.t)}
  if(e.target.id=="bg"){var p=BD.P[+e.target.dataset.i];$("best").hidden=true;map.setView([p[0],p[1]],12);analyse(p[0],p[1])}};
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
