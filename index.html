@@ -6,7 +6,8 @@
 <style>
 html,body{height:100%;margin:0;overflow:hidden;font:15px/1.4 system-ui,sans-serif;background:#efece3}
 .leaflet-container{background:#efece3}
-#map{position:fixed;top:0;left:0;right:0;bottom:0}
+html{--ext:0px}
+#map{position:fixed;top:0;left:0;right:0;bottom:calc(-1*var(--ext))}
 .leaflet-bottom{margin-bottom:env(safe-area-inset-bottom,0px)}
 body:before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:linear-gradient(#0005,#0000);z-index:1050;pointer-events:none}
 select,button{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid #c9c6b8;background:#f6f4ee;color:#22301c;margin:2px 0}
@@ -16,7 +17,7 @@ select,button{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid 
 #tb{position:fixed;top:calc(env(safe-area-inset-top) + 12px);right:12px;z-index:1100;display:flex;flex-direction:column;gap:10px}
 #hm{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:12px;max-width:calc(100vw - 84px);z-index:1100;background:#fff;color:#22301c;border-radius:14px;padding:7px 11px;font-size:.8rem;box-shadow:0 1px 6px #0003}
 #hm:empty{display:none}
-.sh{position:fixed;left:0;right:0;bottom:0;z-index:1500;max-height:46%;overflow:auto;background:#fff;color:#22301c;border-radius:18px 18px 0 0;box-shadow:0 -2px 14px #0003;padding:0 16px calc(32px + env(safe-area-inset-bottom));box-sizing:border-box}
+.sh{position:fixed;left:0;right:0;bottom:calc(-1*var(--ext));z-index:1500;max-height:46%;overflow:auto;background:#fff;color:#22301c;border-radius:18px 18px 0 0;box-shadow:0 -2px 14px #0003;padding:0 16px calc(32px + env(safe-area-inset-bottom) + var(--ext));box-sizing:border-box}
 .sh.big{max-height:88%}
 .sh header{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 0 8px;font-weight:600;cursor:pointer}
 .sh header:before{content:"";position:absolute;top:6px;left:50%;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#d5d2c6}
@@ -27,7 +28,7 @@ label{display:block;margin:10px 0 2px;font-size:.85rem;color:#667060}label.ck{di
 .b{height:8px;background:#ddd;border-radius:4px;overflow:hidden}.b i{display:block;height:100%;background:#4f7a2e}
 small{color:#667060}a{color:#4f7a2e}
 table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-size:.8rem}td,th{padding:3px 2px;border:1px solid #fff}td:first-child{text-align:left;white-space:nowrap}tr.on td:first-child{font-weight:700}tr.on td{outline:2px solid #22301c;outline-offset:-2px}
-#info,.ov{position:fixed;inset:0;z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom))}
+#info,.ov{position:fixed;inset:0;bottom:calc(-1*var(--ext));z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom) + var(--ext))}
 [hidden]{display:none!important}h2,h3{margin:.9em 0 .2em}li{margin:2px 0}.hm{image-rendering:pixelated}
 </style></head><body>
 <div id="map"></div><div id="hm"></div>
@@ -41,6 +42,7 @@ table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-si
 <label class="ck"><input type="checkbox" id="mi" checked> Mikroklima: Moore und Gewässer einrechnen (Annahmen)</label>
 <label class="ck"><input type="checkbox" id="mo"> Moore (BAFU-Inventar) einblenden</label>
 <small>Gilt für Standort-Info, Gebiete und Beste Stellen.</small>
+<label for="ex2">Unterer Rand (Karte nach unten verlängern)</label><select id="ex2"><option value="auto">Automatisch</option><option value="0">0 px</option><option value="30">30 px</option><option value="60">60 px</option><option value="90">90 px</option></select>
 <p><small id="dbg"></small></p></section>
 <section id="gb" class="sh" hidden><header><span>Gute Gebiete</span><span><button id="gc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header>
 <label for="hs">Art</label><select id="hs"></select><label for="hd">Tag</label><select id="hd"></select>
@@ -203,7 +205,10 @@ $("hm").textContent="Tippe auf die Karte";
 function panDown(c){var p=map.latLngToContainerPoint(c);if(p.y>innerHeight*.5)map.panBy([0,p.y-innerHeight*.28])}
 function pop(){if(!mk||!R)return;var t=S.map(function(s,i){return[s.n,A(0,i).a]}).sort(function(a,b){return b[1]-a[1]}).slice(0,3).map(function(x){return x[0]+" "+x[1]}).join(" · ");mk.bindPopup("<b>Heute</b><br>"+t,{closeButton:false,autoPan:false}).openPopup()}
 function tog(id){var o=!$(id).hidden;["gb","set"].forEach(function(x){$(x).hidden=true});$("panel").hidden=true;if(!o)$(id).hidden=false;else if(id=="set"&&DS)$("panel").hidden=false}
-$("tg").onclick=$("gc").onclick=function(){tog("gb")};$("ts").onclick=$("sc").onclick=function(){tog("set");var s=document.createElement("div");s.style.cssText="position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)";document.body.appendChild(s);var cs=getComputedStyle(s),t=parseInt(cs.paddingTop)||0,b=parseInt(cs.paddingBottom)||0;document.body.removeChild(s);$("dbg").textContent="Anzeige: "+(navigator.standalone?"Home-Bildschirm-App":"Browser")+" · Fenster "+innerWidth+"×"+innerHeight+(window.visualViewport?" (sichtbar "+Math.round(visualViewport.height)+")":"")+" · Rand oben "+t+" px, unten "+b+" px"};$("pc").onclick=function(){$("panel").hidden=true};
+$("tg").onclick=$("gc").onclick=function(){tog("gb")};function extGap(){var v;try{v=localStorage.getItem("pilzext")}catch(e){}v=v||"auto";var e=v=="auto"?(navigator.standalone?Math.max(0,Math.min(120,screen.height-innerHeight)):0):+v;document.documentElement.style.setProperty("--ext",e+"px");$("ex2").value=v;return e}
+$("ex2").onchange=function(){try{localStorage.setItem("pilzext",this.value)}catch(e){}extGap();map.invalidateSize();$("dbg").textContent="Verlängerung: "+extGap()+" px"};
+["load","resize","orientationchange"].forEach(function(ev){window.addEventListener(ev,function(){extGap()})});extGap();
+$("ts").onclick=$("sc").onclick=function(){tog("set");var s=document.createElement("div");s.style.cssText="position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)";document.body.appendChild(s);var cs=getComputedStyle(s),t=parseInt(cs.paddingTop)||0,b=parseInt(cs.paddingBottom)||0;document.body.removeChild(s);$("dbg").textContent="Anzeige: "+(navigator.standalone?"Home-Bildschirm-App":"Browser")+" · Fenster "+innerWidth+"×"+innerHeight+(window.visualViewport?" (sichtbar "+Math.round(visualViewport.height)+")":"")+" · Rand oben "+t+" px, unten "+b+" px · Bildschirm "+screen.height+" · Verlängerung "+extGap()+" px"};$("pc").onclick=function(){$("panel").hidden=true};
 document.querySelectorAll(".sh header").forEach(function(h){h.onclick=function(e){if(!e.target.closest("button"))h.parentNode.classList.toggle("big")}});
 var MOOR="ch.bafu.bundesinventare-hochmoore,ch.bafu.bundesinventare-flachmoore",WATER="ch.swisstopo.swisstlm3d-gewaessernetz",MI=null,LP=null,SA=null,CH=false,HCb={},BD=null;
 function showChart(){$("cht").innerHTML=CH&&DS?chart(DS[0]):""}
