@@ -6,7 +6,8 @@
 <style>
 html,body{height:100%;margin:0;overflow:hidden;font:15px/1.4 system-ui,sans-serif;background:#efece3}
 .leaflet-container{background:#efece3}
-#map{position:fixed;top:0;left:0;width:100%;height:100vh;height:100dvh}
+#map{position:fixed;top:0;left:0;right:0;bottom:0}
+.leaflet-bottom{margin-bottom:env(safe-area-inset-bottom,0px)}
 body:before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:linear-gradient(#0005,#0000);z-index:1050;pointer-events:none}
 select,button{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid #c9c6b8;background:#f6f4ee;color:#22301c;margin:2px 0}
 .ib{width:46px;height:46px;border-radius:50%;border:0;background:#fff;box-shadow:0 1px 6px #0003;padding:0;display:flex;align-items:center;justify-content:center}
@@ -15,8 +16,8 @@ select,button{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid 
 #tb{position:fixed;top:calc(env(safe-area-inset-top) + 12px);right:12px;z-index:1100;display:flex;flex-direction:column;gap:10px}
 #hm{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:12px;max-width:calc(100vw - 84px);z-index:1100;background:#fff;color:#22301c;border-radius:14px;padding:7px 11px;font-size:.8rem;box-shadow:0 1px 6px #0003}
 #hm:empty{display:none}
-.sh{position:fixed;left:0;right:0;bottom:0;z-index:1500;max-height:46vh;overflow:auto;background:#fff;color:#22301c;border-radius:18px 18px 0 0;box-shadow:0 -2px 14px #0003;padding:0 16px calc(16px + env(safe-area-inset-bottom));box-sizing:border-box}
-.sh.big{max-height:88vh}
+.sh{position:fixed;left:0;right:0;bottom:0;z-index:1500;max-height:46%;overflow:auto;background:#fff;color:#22301c;border-radius:18px 18px 0 0;box-shadow:0 -2px 14px #0003;padding:0 16px calc(32px + env(safe-area-inset-bottom));box-sizing:border-box}
+.sh.big{max-height:88%}
 .sh header{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;padding:16px 0 8px;font-weight:600;cursor:pointer}
 .sh header:before{content:"";position:absolute;top:6px;left:50%;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#d5d2c6}
 .sh header span:last-child{display:flex;gap:8px}
@@ -202,14 +203,19 @@ $("hm").textContent="Tippe auf die Karte";
 function panDown(c){var p=map.latLngToContainerPoint(c);if(p.y>innerHeight*.5)map.panBy([0,p.y-innerHeight*.28])}
 function pop(){if(!mk||!R)return;var t=S.map(function(s,i){return[s.n,A(0,i).a]}).sort(function(a,b){return b[1]-a[1]}).slice(0,3).map(function(x){return x[0]+" "+x[1]}).join(" · ");mk.bindPopup("<b>Heute</b><br>"+t,{closeButton:false,autoPan:false}).openPopup()}
 function tog(id){var o=!$(id).hidden;["gb","set"].forEach(function(x){$(x).hidden=true});$("panel").hidden=true;if(!o)$(id).hidden=false;else if(id=="set"&&DS)$("panel").hidden=false}
-$("tg").onclick=$("gc").onclick=function(){tog("gb")};$("ts").onclick=$("sc").onclick=function(){tog("set");var s=document.createElement("div");s.style.cssText="position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px)";document.body.appendChild(s);var t=parseInt(getComputedStyle(s).paddingTop)||0;document.body.removeChild(s);$("dbg").textContent="Anzeige: "+(navigator.standalone?"Home-Bildschirm-App":"Browser")+" · Fenster "+innerWidth+"×"+innerHeight+" · oberer Rand (Notch) "+t+" px"};$("pc").onclick=function(){$("panel").hidden=true};
+$("tg").onclick=$("gc").onclick=function(){tog("gb")};$("ts").onclick=$("sc").onclick=function(){tog("set");var s=document.createElement("div");s.style.cssText="position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)";document.body.appendChild(s);var cs=getComputedStyle(s),t=parseInt(cs.paddingTop)||0,b=parseInt(cs.paddingBottom)||0;document.body.removeChild(s);$("dbg").textContent="Anzeige: "+(navigator.standalone?"Home-Bildschirm-App":"Browser")+" · Fenster "+innerWidth+"×"+innerHeight+(window.visualViewport?" (sichtbar "+Math.round(visualViewport.height)+")":"")+" · Rand oben "+t+" px, unten "+b+" px"};$("pc").onclick=function(){$("panel").hidden=true};
 document.querySelectorAll(".sh header").forEach(function(h){h.onclick=function(e){if(!e.target.closest("button"))h.parentNode.classList.toggle("big")}});
 var MOOR="ch.bafu.bundesinventare-hochmoore,ch.bafu.bundesinventare-flachmoore",WATER="ch.swisstopo.swisstlm3d-gewaessernetz",MI=null,LP=null,SA=null,CH=false,HCb={},BD=null;
 function showChart(){$("cht").innerHTML=CH&&DS?chart(DS[0]):""}
 function chart(d){var P=d.daily.precipitation_sum,n=P.length,T=[],k,i;for(k=0;k<n;k++){var s=0,c=0;for(i=k*24;i<k*24+24;i++){var v=d.hourly.soil_temperature_6cm[i];if(v!=null){s+=v;c++}}T.push(c?s/c:null)}
- var mx=Math.max.apply(null,P.map(function(v){return v||0}).concat([5])),tv=T.filter(function(v){return v!=null}),t0=Math.min.apply(null,tv),t1=Math.max.apply(null,tv),W=340,bw=W/n,X=function(i){return i*bw+bw/2},Y=function(v){return 10+110*(1-(v-t0)/Math.max(1,t1-t0))};
- return'<svg viewBox="0 0 340 132" width="100%"><rect x="'+14*bw+'" y="0" width="'+8*bw+'" height="120" fill="#eef3e6"/>'+P.map(function(v,i){var hh=(v||0)/mx*50;return'<rect x="'+(i*bw+2)+'" y="'+(120-hh)+'" width="'+(bw-4)+'" height="'+hh+'" fill="#6aa5d8"/>'}).join("")+
- '<polyline fill="none" stroke="#c4552b" stroke-width="2" points="'+T.map(function(v,i){return v==null?"":X(i)+","+Y(v)}).join(" ")+'"/><line x1="'+14*bw+'" y1="0" x2="'+14*bw+'" y2="120" stroke="#22301c" stroke-dasharray="3"/><text x="2" y="130" font-size="9">−14 d</text><text x="'+(14*bw-10)+'" y="130" font-size="9">heute</text><text x="'+(W-24)+'" y="130" font-size="9">+7 d</text></svg><small>Blau: Regen pro Tag (max '+mx.toFixed(0)+' mm) · Rot: Bodentemperatur 6 cm ('+t0.toFixed(0)+'–'+t1.toFixed(0)+' °C) · grün hinterlegt: Prognose</small>'}
+ var mx=Math.max.apply(null,P.map(function(v){return v||0}).concat([5])),pm=mx<=10?Math.ceil(mx):Math.ceil(mx/5)*5,tv=T.filter(function(v){return v!=null}),t0=Math.floor(Math.min.apply(null,tv)),t1=Math.ceil(Math.max.apply(null,tv));if(t1-t0<4)t1=t0+4;
+ var L=32,Rm=32,W=340,pw=W-L-Rm,bw=pw/n,X=function(i){return L+i*bw+bw/2},Y=function(v){return 14+100*(1-(v-t0)/(t1-t0))},PY=function(v){return 114-v/pm*60},g="",tx="";
+ [0,.5,1].forEach(function(f){var pv=pm*f,y=PY(pv),tt=t0+(t1-t0)*f,ty=Y(tt);g+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-Rm)+'" y2="'+y+'" stroke="#e3e0d6"/>';
+  tx+='<text x="'+(L-4)+'" y="'+(y+3)+'" font-size="9" text-anchor="end" fill="#3b78a8">'+(Math.round(pv*10)/10)+'</text><text x="'+(W-Rm+4)+'" y="'+(ty+3)+'" font-size="9" fill="#b3441f">'+(Math.round(tt*10)/10)+'</text>'});
+ return'<svg viewBox="0 0 340 140" width="100%"><rect x="'+(L+14*bw)+'" y="14" width="'+(8*bw)+'" height="100" fill="#eef3e6"/>'+g+P.map(function(v,i){var hh=(v||0)/pm*60;return'<rect x="'+(L+i*bw+2)+'" y="'+(114-hh)+'" width="'+(bw-4)+'" height="'+hh+'" fill="#6aa5d8"/>'}).join("")+
+ '<polyline fill="none" stroke="#c4552b" stroke-width="2" points="'+T.map(function(v,i){return v==null?"":X(i)+","+Y(v)}).join(" ")+'"/><line x1="'+(L+14*bw)+'" y1="14" x2="'+(L+14*bw)+'" y2="114" stroke="#22301c" stroke-dasharray="3"/>'+tx+
+ '<text x="'+(L-4)+'" y="9" font-size="9" text-anchor="end" fill="#3b78a8" font-weight="700">mm</text><text x="'+(W-Rm+4)+'" y="9" font-size="9" fill="#b3441f" font-weight="700">°C</text>'+
+ '<text x="'+L+'" y="128" font-size="9">−14 Tage</text><text x="'+(L+14*bw-12)+'" y="128" font-size="9">heute</text><text x="'+(W-Rm)+'" y="128" font-size="9" text-anchor="end">+7 Tage</text></svg><small><span style="color:#3b78a8">■ Niederschlag in mm pro Tag</span> (Skala links, bis '+pm+' mm) · <span style="color:#b3441f">— Bodentemperatur in 6 cm Tiefe, Tagesmittel in °C</span> (Skala rechts, '+t0+' bis '+t1+' °C) · grün hinterlegt: Prognose</small>'}
 $("vg").onclick=function(){CH=!CH;showChart()};
 var ml=L.tileLayer.wms("https://wms.geo.admin.ch/",{layers:MOOR,format:"image/png",transparent:true,version:"1.3.0",opacity:.7,attribution:"© BAFU"});
 $("mo").onchange=function(){if(this.checked)ml.addTo(map);else map.removeLayer(ml)};
