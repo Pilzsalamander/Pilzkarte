@@ -6,6 +6,12 @@
 <style>
 html,body{height:100%;margin:0;overflow:hidden;font:15px/1.4 system-ui,sans-serif;background:var(--bg,#efece3)}
 .leaflet-container{background:var(--bg,#efece3)}
+/* Loading spinner */
+#spinner-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#efece3a0;opacity:0;pointer-events:none;transition:opacity .25s}
+#spinner-overlay.on{opacity:1;pointer-events:auto}
+.spinner{width:48px;height:48px;border-radius:50%;border:4px solid #d5d2c6;border-top-color:#4f7a2e;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#spinner-msg{margin-left:14px;font-size:.95rem;color:#22301c;font-weight:500}
 html{--ext:0px}
 html.lb body{position:fixed;top:0;left:0;right:0;bottom:0;height:auto}html.lb #map{position:absolute;top:0;left:0;right:0;bottom:calc(-1*var(--ext))}
 html.lc,html.lc body{height:auto;min-height:100%;overflow:visible}html.lc #map{position:absolute;top:0;left:0;width:100%;height:calc(100vh + var(--ext))}
@@ -33,9 +39,11 @@ small{color:#667060}a{color:#4f7a2e}
 table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-size:.8rem}td,th{padding:3px 2px;border:1px solid #fff}td:first-child{text-align:left;white-space:nowrap}tr.on td:first-child{font-weight:700}tr.on td{outline:2px solid #22301c;outline-offset:-2px}
 #info,.ov{position:fixed;inset:0;bottom:calc(-1*var(--ext));z-index:2000;background:#fff;color:#22301c;overflow:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom) + var(--ext))}
 [hidden]{display:none!important}h2,h3{margin:.9em 0 .2em}li{margin:2px 0}.hm{image-rendering:pixelated}
+#info{position:relative;padding-top:8px}#info button,#flog button,#best button{position:absolute;top:4px;right:8px;background:none;border:none;font-size:1.3rem;color:#667060;cursor:pointer}.ov input[type="number"]{width:100%;box-sizing:border-box;padding:10px;margin-bottom:8px;font-size:1rem;border-radius:10px}
 </style></head><body>
 <div id="map"></div><div id="hm"></div>
-<div id="tb"><button class="ib" id="loc" title="Mein Standort" aria-label="Mein Standort"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button><button class="ib" id="tg" title="Gute Gebiete" aria-label="Gute Gebiete"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button><button class="ib" id="bs" title="Beste Stellen" aria-label="Beste Stellen"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button><button class="ib" id="lg" title="Fundlog" aria-label="Fundlog"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></svg></button><button class="ib" id="ts" title="Einstellungen" aria-label="Einstellungen"><svg viewBox="0 0 24 24"><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></svg></button><button class="ib" id="inf" title="Bedingungen" aria-label="Bedingungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button></div>
+<div id="spinner-overlay"><div class="spinner"></div><span id="spinner-msg">Lade…</span></div>
+<div id="tb"><button class="ib" id="loc" title="Mein Standort" aria-label="Mein Standort"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button><button class="ib s" id="ci2" title="Koordinaten eingeben" aria-label="Koordinaten"><svg viewBox="0 0 24 24"><path d="M12 20V4M12 4l-4 4M12 4l4 4"/></svg></button><button class="ib" id="tg" title="Gute Gebiete" aria-label="Gute Gebiete"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button><button class="ib" id="bs" title="Beste Stellen" aria-label="Beste Stellen"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></button><button class="ib" id="lg" title="Fundlog" aria-label="Fundlog"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/></svg></button><button class="ib" id="ts" title="Einstellungen" aria-label="Einstellungen"><svg viewBox="0 0 24 24"><path d="M4 6h8M16 6h4M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></svg></button><button class="ib" id="inf" title="Bedingungen" aria-label="Bedingungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button></div>
 <section id="panel" class="sh" hidden><header><span>Pilze am Standort</span><span><button id="vg" class="ib s" title="Verlauf" aria-label="Verlauf"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 15l4-4 3 3 5-6"/></svg></button><button id="pc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header><div id="out"></div><div id="cht"></div></section>
 <section id="set" class="sh" hidden><header><span>Einstellungen</span><span><button id="sc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header>
 <label for="hb">Lebensraum / Baumart</label><select id="hb"></select>
@@ -58,6 +66,15 @@ table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-si
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 window.addEventListener("error",function(e){var x=document.getElementById("hm");if(x)x.textContent="Fehler: "+(e.message||"Skript")+(e.lineno?" (Zeile "+e.lineno+")":"")});
+// LOADING SPINNER
+var _sp=0;function showMsg(t){_sp++;$("spinner-msg").textContent=t;$("spinner-overlay").classList.add("on")}
+function hideMsg(){--_sp;if(_sp<=0){_sp=0;$("spinner-overlay").classList.remove("on")}}
+// COORDINATE INPUT FALLBACK
+var _ci=null,ci2=null;
+function showCoordInput(){if(ci2)return;ci2=document.createElement("div");ci2.className="ov";ci2.innerHTML='<button id="cci">✕ Schliessen</button><h3>Koordinaten eingeben</h3><p><small>Breitengrad (lat) und Längengrad (lng), z.B. 46.9480, 7.4474 für Bern</small></p><label for="_clat">Latitude</label><input id="_clat" type="number" step="any" placeholder="z.B. 46.9480" style="width:100%;box-sizing:border-box;padding:8px;margin-bottom:8px"><label for="_clang">Longitude</label><input id="_clang" type="number" step="any" placeholder="z.B. 7.4474" style="width:100%;box-sizing:border-box;padding:8px;margin-bottom:8px"><button id="_cgo">Los</button>';
+ ci2.onclick=function(e){if(e.target.id==="cci")closeCoord();else if(e.target.id==="_cgo"){var lat=parseFloat($("_clat").value),lng=parseFloat($("_clang").value);if(isNaN(lat)||isNaN(lng)){$("hm").textContent="Ungültige Koordinaten.";return}map.setView([lat,lng],13);analyse(lat,lng);closeCoord()}};
+ document.body.appendChild(ci2)}
+function closeCoord(){if(ci2){document.body.removeChild(ci2);ci2=null;ci=null}}
 //LOGIC
 var H=["Fichte","Tanne","Buche","Eiche","Kiefer/Föhre","Lärche","Birke","Ahorn/Esche/Laubmisch","Erle/Auwald","Wiese/Waldrand/Obstgarten","Nadelwald (gemischt)","Laubwald (gemischt)","Mischwald"];
 function hw(s,i){if(i<10)return s.h[i];var g=i==10?[0,1,4]:i==11?[2,3,6,7]:[0,1,2,3,4,6,7];return avg(g.map(function(j){return s.h[j]}))}
@@ -138,19 +155,20 @@ function draw(){
   '<p><small>Schwellen nach <a href="https://sporensuche.de/blog/wann-wachsen-pilze/" target="_blank">Sporensuche</a> (Deutschland, für die Schweiz nicht geprüft). Prognose = Modellwetter, unsicher. Funde: <a href="https://swissfungi.wsl.ch" target="_blank">SwissFungi</a> · Wetter: Open-Meteo · © swisstopo</small></p>'}
 function analyse(lat,lng){
  LP=[lat,lng];SA=null;MI=null;$("panel").hidden=false;$("set").hidden=true;$("gb").hidden=true;if($("hm").textContent=="Tippe auf die Karte")$("hm").textContent="";var c=[lat,lng];if(mk)mk.setLatLng(c);else mk=L.marker(c).addTo(map);panDown(c);
+ showMsg("Wetterdaten werden geladen…");
  if(ci)ci.setLatLng(c);else ci=L.circle(c,{radius:1000,color:"#4f7a2e",weight:2,fillOpacity:.1}).addTo(map);
  $("out").innerHTML="<small>Lade Wetterdaten …</small>";
  var r0=[+lat.toFixed(2),+lng.toFixed(2)],pts=[r0,[r0[0]+.01,r0[1]],[r0[0],r0[1]+.01],[r0[0]-.01,r0[1]],[r0[0],r0[1]-.01]];
  omGet("m",pts,U,0)
- .then(function(ds){return withIcon(ds,pts)}).then(function(ds){return withP(ds,pts)}).then(function(ds){var la=pts.map(function(p){return p[0]}),ln=pts.map(function(p){return p[1]});pts.forEach(function(p){var dy=200/110540,dx=200/(111320*Math.cos(p[0]*Math.PI/180));la.push(p[0]+dy,p[0],p[0]-dy,p[0]);ln.push(p[1],p[1]+dx,p[1],p[1]-dx)});return elev(la,ln).then(function(el){SA=null;if(el){ds.forEach(function(d,i){d.el=el[i]});SA=pts.map(function(p,i){return sla(el[5+4*i],el[6+4*i],el[7+4*i],el[8+4*i],200,200)})}return ds})}).then(function(ds){return Promise.all([forestAt(lat,lng,MOOR,1),forestAt(lat,lng,WATER,1)]).then(function(r){MI=r[0]==null&&r[1]==null?null:{moor:r[0]||0,wat:r[1]||0};return ds})}).then(function(ds){DS=ds;sel=0;compute()}).catch(function(e){$("out").innerHTML="<small>Fehler: "+e.message+"</small>"})}
+ .then(function(ds){showMsg("Lade MeteoSchweiz-Daten…");return withIcon(ds,pts)}).then(function(ds){return withP(ds,pts)}).then(function(ds){showMsg("Lade Höhenmodell…");var la=pts.map(function(p){return p[0]}),ln=pts.map(function(p){return p[1]});pts.forEach(function(p){var dy=200/110540,dx=200/(111320*Math.cos(p[0]*Math.PI/180));la.push(p[0]+dy,p[0],p[0]-dy,p[0]);ln.push(p[1],p[1]+dx,p[1],p[1]-dx)});return elev(la,ln).then(function(el){SA=null;if(el){ds.forEach(function(d,i){d.el=el[i]});SA=pts.map(function(p,i){return sla(el[5+4*i],el[6+4*i],el[7+4*i],el[8+4*i],200,200)})}return ds})}).then(function(ds){showMsg("Prüfe Wald und Moor…");return Promise.all([forestAt(lat,lng,MOOR,1),forestAt(lat,lng,WATER,1)]).then(function(r){MI=r[0]==null&&r[1]==null?null:{moor:r[0]||0,wat:r[1]||0};return ds})}).then(function(ds){DS=ds;sel=0;compute();hideMsg()}).catch(function(e){$("out").innerHTML="<small>Fehler: "+e.message+"</small>";hideMsg()});}
 
 var DV="&daily=precipitation_sum,et0_fao_evapotranspiration,temperature_2m_max,temperature_2m_min&hourly=soil_temperature_6cm,soil_temperature_18cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,vapour_pressure_deficit,snow_depth",ICN=0;
 function jf(u,n){n=n||0;return fetch(u).then(function(r){if(r.status==429&&n<2)return new Promise(function(ok){setTimeout(ok,2500*(n+1))}).then(function(){return jf(u,n+1)});if(!r.ok)throw new Error(r.status==429?"Zu viele Anfragen bei Open-Meteo (Limit). Bitte 1–2 Minuten warten und nochmal versuchen.":"HTTP "+r.status);return r.json()})}
 function U(la,ln){return"https://api.open-meteo.com/v1/forecast?latitude="+la.join(",")+"&longitude="+ln.join(",")+"&past_days=14&forecast_days=8&timezone=auto"+DV}
 var OC={},TTL=600000;
 function ok2(k,p){return k+":"+p[0].toFixed(2)+","+p[1].toFixed(2)}
-function lsg(k){try{var s=localStorage.getItem("om:"+k);if(!s)return null;var o=JSON.parse(s);if(Date.now()-o.t<TTL)return o;localStorage.removeItem("om:"+k)}catch(e){}return null}
-function lss(k,o){try{var s=JSON.stringify(o);if(s.length<120000)localStorage.setItem("om:"+k,s)}catch(e){}}
+function lsg(k){try{var s=localStorage.getItem("om:"+k);if(!s)return null;var o=JSON.parse(s);if(Date.now()-o.t<TTL)return o;localStorage.removeItem("om:"+k)}catch(e){delete localStorage["om:"+k]}return null}
+function lss(k,o){try{var s=JSON.stringify(o);if(s.length<80000)localStorage.setItem("om:"+k,s)}catch(e){if(e.name==="QuotaExceededError"||e.code==22){delete localStorage["om:"+k];console.warn("Cache-Eintrag entfernt")}}}
 try{Object.keys(localStorage).forEach(function(k){if(k.indexOf("om:")==0)lsg(k.slice(3))})}catch(e){}
 function omGet(kind,pts,build,tries){var now=Date.now(),keys=pts.map(function(p){return ok2(kind,p)}),need=[],seen={};
  keys.forEach(function(k,i){var c=OC[k];if(!c||now-c.t>TTL){c=lsg(k);if(c)OC[k]=c;else delete OC[k]}if(!c&&!seen[k]){seen[k]=1;need.push(i)}});
@@ -199,12 +217,12 @@ $("hg").onclick=function(){
  if(HC&&HC.key==key){heatDraw();return}
  for(i=0;i<C;i++)for(j=0;j<C;j++)pts.push([N-(i+.5)*(N-S0)/C,W0+(j+.5)*(E-W0)/C]);
  for(i=0;i<G;i++)for(j=0;j<G;j++){fl.push(+(N-(i+.5)*(N-S0)/G).toFixed(4));fn.push(+(W0+(j+.5)*(E-W0)/G).toFixed(4))}
- $("hm").textContent="Lade Wetter …";
- omGet("m",pts,U,0).then(function(ds){return withIcon(ds,pts)}).then(function(ds){return withP(ds,pts)})
- .then(function(ds){$("hm").textContent="Lade Höhe und Wald …";return Promise.all([ds,elev(fl,fn),forest(b),forest(b,MOOR,false),forest(b,WATER,false)])})
- .then(function(r){HC={key:key,b:b,ds:r[0],el:r[1],fm:r[2],mo:r[3],wa:r[4]};heatDraw()})
- .catch(function(e){$("hm").textContent="Fehler: "+(e.message||"Abfrage")})};
-["hs","hd"].forEach(function(id){$(id).addEventListener("change",function(){if(HC)heatDraw()})});
+ showMsg("Heatmap wird berechnet...");
+  $("hm").textContent="Lade Wetter …";
+  omGet("m",pts,U,0).then(function(ds){return withIcon(ds,pts)}).then(function(ds){return withP(ds,pts)})
+  .then(function(ds){showMsg("Lade Höhe und Wald…");$("hm").textContent="Lade Höhe und Wald …";return Promise.all([ds,elev(fl,fn),forest(b),forest(b,MOOR,false),forest(b,WATER,false)])})
+  .then(function(r){HC={key:key,b:b,ds:r[0],el:r[1],fm:r[2],mo:r[3],wa:r[4]};heatDraw();hideMsg()})
+  .catch(function(e){$("hm").textContent="Fehler: "+(e.message||"Abfrage");hideMsg()});["hs","hd"].forEach(function(id){$(id).addEventListener("change",function(){if(HC)heatDraw()})});
 
 $("hm").textContent="Tippe auf die Karte";
 function panDown(c){var p=map.latLngToContainerPoint(c);if(p.y>innerHeight*.5)map.panBy([0,p.y-innerHeight*.28])}
@@ -238,8 +256,8 @@ $("mi").onchange=function(){MICRO=this.checked;if(DS)compute();if(HC)heatDraw()}
 $("ex").onchange=function(){EXPO=this.checked;if(DS)compute();if(HC)heatDraw()};
 // ---- Fundlog
 var LG=L.layerGroup().addTo(map);
-function LS(){try{return JSON.parse(localStorage.getItem("pilzlog")||"[]")}catch(e){return[]}}
-function SV(a){try{localStorage.setItem("pilzlog",JSON.stringify(a))}catch(e){}}
+function LS(){try{var s=localStorage.getItem("pilzlog");if(!s)return [];var a=JSON.parse(s);if(!Array.isArray(a))return [];while(a.length>500)a.shift();return a}catch(e){return[]}}
+function SV(a){try{var s=JSON.stringify(a);if(s.length>50000){a=a.slice(-200);s=JSON.stringify(a)};localStorage.setItem("pilzlog",s)}catch(e){if(e.name==="QuotaExceededError"||e.code==22){try{var a2=LS();a2=a2.slice(0,Math.max(1,a2.length-5));SV(a2);$("hm").textContent="LocalStorage voll: Einträge bereinigt"}catch(e2){}}}}
 function logHtml(){var a=LS().slice().reverse(),f=a.filter(function(x){return x.res=="gefunden"&&x.sc!=null}),g=a.filter(function(x){return x.res!="gefunden"&&x.sc!=null}),m=function(l){return l.length?Math.round(avg(l.map(function(x){return x.sc}))):"–"};
  return'<h2>Fundlog</h2><p><small>Speichert nur auf diesem Gerät. Gespeichert wird am zuletzt angetippten Punkt, bei Datum heute mit dem Modellwert. Trage auch «nichts gefunden» ein, das macht die Prüfung aussagekräftig.</small></p><p><select id="la">'+S.map(function(s){return'<option>'+s.n+'</option>'}).join("")+'<option>andere</option></select> <select id="lr"><option>gefunden</option><option>nichts gefunden</option></select> <input type="date" id="ld" value="'+new Date().toISOString().slice(0,10)+'"><br><input id="ln" placeholder="Notiz (Menge, Baum …)" style="width:100%;box-sizing:border-box;margin:4px 0"><button id="ls">Am markierten Punkt speichern</button> <button id="lx">CSV</button> <button id="lm">Auf Karte</button></p><p id="lt"><small>'+(a.length?'Modellwert: gefunden Ø '+m(f)+' (n='+f.length+'), nichts gefunden Ø '+m(g)+' (n='+g.length+')':'Noch keine Einträge.')+'</small></p>'+
  a.map(function(x){return'<p>'+x.d+' · '+x.art+' · '+x.res+(x.sc!=null?' · Modell '+x.sc:'')+' · '+x.lat.toFixed(3)+', '+x.lng.toFixed(3)+(x.n?' · '+x.n:'')+' <button data-d="'+x.id+'">✕</button></p>'}).join("")}
@@ -264,11 +282,14 @@ function snap(la,ln){return forestGrid(la,ln,2,8).then(function(f){if(!f)return 
  if(b<0)return{f:0};y=b>>3;x=b&7;return{lat:la+d-(y+.5)*d/4,lng:ln-e+(x+.5)*e/4,f:f[b]}})}
 function bestRun(o){var P=[[o[0],o[1],0,0]];[[5,6],[10,8],[25,8],[50,10],[75,8],[100,10],[125,8],[150,12]].forEach(function(c){for(var k=0;k<c[1];k++){var a=2*Math.PI*k/c[1]+c[0]*.37;P.push([o[0]+c[0]*Math.cos(a)/110.54,o[1]+c[0]*Math.sin(a)/(111.32*Math.cos(o[0]*Math.PI/180)),c[0],a])}});
  $("bb").innerHTML="<h2>Beste Stellen</h2><p>Lade Wetter für "+P.length+" Punkte …</p>";
- omGet("m",P,U,0).then(function(ds){return withP(ds,P)}).then(function(ds){
-  var fc=+$("fc").value,hb=+$("hb").value,
+ showMsg("Berechne Scores...");
+  omGet("m",P,U,0)
+  .then(function(ds){return withP(ds,P)}).then(function(ds){
+   var fc=+$("fc").value,hb=+$("hb").value,
   sc=function(i,t,el){var dt=new Date();dt.setDate(dt.getDate()+t);var w=fromApi(ds[i],t);if(el!=null){var dT=-.0065*(el-w.alt);w.t7+=dT;w.t14+=dT;w.tmin+=dT;w.tmax+=dT;if(isFinite(w.tmin14))w.tmin14+=dT;if(isFinite(w.tm20))w.tm20+=dT;w.alt=el}return score(w,hb,fc,dt.getMonth()+1,dt.getDate())[0].sc},
   s0=P.map(function(p,i){var r=[];for(var t=0;t<=7;t++)r.push(sc(i,t));return r}),mx=s0.map(function(r){return Math.max.apply(null,r)}),
   ord=P.map(function(p,i){return i}).filter(function(i){return mx[i]>=20}).sort(function(a,b){return mx[b]-mx[a]}).slice(0,40);
+  showMsg("Prüfe Waldflächen…");
   $("bb").innerHTML="<h2>Beste Stellen</h2><p>Suche Waldflächen bei "+ord.length+" Kandidaten …</p>";
   return Promise.all(ord.map(function(i){return snap(P[i][0],P[i][1])})).then(function(sn){
    var ok=sn.some(function(s){return s&&s.f>0}),cand=[];
@@ -277,7 +298,7 @@ function bestRun(o){var P=[[o[0],o[1],0,0]];[[5,6],[10,8],[25,8],[50,10],[75,8],
    return pr.then(function(el){cand.forEach(function(c,n){c.el=el&&el[n]!=null?el[n]:null;c.sc=[];for(var t=0;t<=7;t++)c.sc.push(sc(c.i,t,c.el));
      var dla=(c.lat-o[0])*110.54,dlo=(c.lng-o[1])*111.32*Math.cos(o[0]*Math.PI/180);c.d=Math.hypot(dla,dlo);c.a=(Math.atan2(dlo,dla)+2*Math.PI)%(2*Math.PI)});
     var M=[10,50,100,150].map(function(km){var r=[];for(var t=0;t<=7;t++){var b={v:0,i:-1};cand.forEach(function(c,n){if(c.d<=km+2.5&&c.sc[t]>b.v)b={v:c.sc[t],i:n}});r.push(b)}return r});
-    BD={P:P,ds:ds,C:cand,M:M,ok:ok};bestDraw(0,0)})})}).catch(function(e){$("bb").innerHTML="<h2>Beste Stellen</h2><p>Fehler: "+(e.message||"Abfrage")+"</p>"})}
+    BD={P:P,ds:ds,C:cand,M:M,ok:ok};bestDraw(0,0);hideMsg()})})}).catch(function(e){$("bb").innerHTML="<h2>Beste Stellen</h2><p>Fehler: "+(e.message||"Abfrage")+"</p>";hideMsg()})}}
 function bestDraw(r,t){var B=BD,km=[10,50,100,150],hd=['<th></th>'];for(var q=0;q<=7;q++){var d=new Date();d.setDate(d.getDate()+q);hd.push('<th>'+(q?d.toLocaleDateString("de-CH",{weekday:"short",day:"numeric"}):"Heute")+'</th>')}
  var tb='<table><tr>'+hd.join("")+'</tr>'+B.M.map(function(row,ri){return'<tr><td>bis '+km[ri]+' km</td>'+row.map(function(c,ti){return'<td data-r="'+ri+'" data-t="'+ti+'" style="background:hsl(95 45% '+(96-.34*c.v)+'%)'+(ri==r&&ti==t?';outline:2px solid #22301c':'')+'">'+c.v+'</td>'}).join("")+'</tr>'}).join("")+'</table>',c=B.M[r][t],p=c.i>=0?B.C[c.i]:null,dd=new Date();dd.setDate(dd.getDate()+t);
  $("bb").innerHTML='<h2>Beste Stellen</h2><p><small>Steinpilz, Lebensraum: '+H[+$("hb").value]+', bester Wert pro Radius und Tag. Tippe auf eine Zelle.</small></p>'+tb+(p?'<p><b>'+dd.toLocaleDateString("de-CH",{weekday:"long",day:"numeric",month:"numeric"})+', bis '+km[r]+' km: Wert '+c.v+'</b><br>'+(p.d>=1?Math.round(p.d)+' km nach '+dn(p.a*180/Math.PI%360):'am Standort')+', '+Math.round(p.el!=null?p.el:B.ds[p.i].elevation)+' m, Wald '+(p.f!=null?Math.round(p.f*100)+' % (500-m-Feld)':'nicht geprüft')+'<br><button id="bg" data-i="'+c.i+'">→ auf Karte zeigen</button></p>':'<p>Keine Stelle mit Wert ≥ 10.</p>')+'<p><small>'+(B.ok?'Die Stellen liegen auf Waldflächen (BAFU-Karte, mindestens 40 % Wald in einem 500-m-Feld, Suche im Umkreis von 2 km um den Wetterpunkt). Städte, Seen und offenes Gelände fallen heraus.':'Achtung: Die Waldkarte war nicht auswertbar. Die Stellen sind nicht auf Wald geprüft und können Siedlungen oder Seen sein.')+' '+B.P.length+' Wetterpunkte, der Abstand zwischen ihnen wächst mit der Entfernung, gute Stellen dazwischen können fehlen. Hang nicht berücksichtigt. Der Lebensraum (Baumart) gilt für alle Orte gleich.</small></p>'}
@@ -287,5 +308,5 @@ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(
 map.on("click",function(e){analyse(e.latlng.lat,e.latlng.lng)});
 $("out").onclick=function(e){var tr=e.target.closest("tr");if(tr&&tr.dataset.t!=null&&R){sel=+tr.dataset.t;draw()}};
 $("hb").onchange=$("fc").onchange=function(){if(DS)compute();if(HC)heatDraw()};
-$("loc").onclick=function(){navigator.geolocation.getCurrentPosition(function(p){map.setView([p.coords.latitude,p.coords.longitude],13);analyse(p.coords.latitude,p.coords.longitude)},function(){$("out").innerHTML="<small>Standort nicht erlaubt. Tippe auf die Karte.</small>"})};
+$("loc").onclick=function(){navigator.geolocation.getCurrentPosition(function(p){map.setView([p.coords.latitude,p.coords.longitude],13);analyse(p.coords.latitude,p.coords.longitude)},function(){$("out").innerHTML="<small>Standort nicht erlaubt. Tippe auf die Karte oder nutze Koordinaten.</small>"})};
 </script></body></html>
