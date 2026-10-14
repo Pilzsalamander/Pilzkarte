@@ -46,7 +46,7 @@ table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-si
 <label class="ck"><input type="checkbox" id="mo"> Moore (BAFU-Inventar) einblenden</label>
 <small>Gilt für Standort-Info, Gebiete und Beste Stellen.</small>
 <label for="ex2">Unterer Rand: Kartenhöhe (bei Streifen unten der Reihe nach probieren)</label><select id="ex2"><option value="auto">Automatisch</option><option value="bottom">Standard (Rand unten)</option><option value="lvh">Grosse Höhe (lvh)</option><option value="fill">Verfügbare Höhe (fill-available)</option><option value="screen">Bildschirmhöhe</option><option value="p60">Fenster + 60 px</option></select>
-<label for="lay">Layout-Technik (Test)</label><select id="lay"><option value="a">A: Standard</option><option value="b">B: Seite fest verankert</option><option value="c">C: Normaler Fluss</option><option value="d">D: Eigene Grafikebene</option></select>
+<label for="lay">Layout-Technik (nur ändern, wenn unten ein Streifen erscheint)</label><select id="lay"><option value="c">Normaler Fluss (Standard)</option><option value="a">Fest positioniert (alt)</option><option value="b">Seite fest verankert</option><option value="d">Eigene Grafikebene</option></select>
 <label for="bgc">Farbe des Randes</label><select id="bgc"><option value="#efece3">Beige</option><option value="#ffffff">Weiss</option><option value="#4f7a2e">Grün</option><option value="#c0392b">Rot (Test)</option></select>
 <p><small id="dbg"></small></p></section>
 <section id="gb" class="sh" hidden><header><span>Gute Gebiete</span><span><button id="gc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header>
@@ -214,7 +214,7 @@ $("tg").onclick=$("gc").onclick=function(){tog("gb")};function mh(c){var t=docum
 function extGap(){var v;try{v=localStorage.getItem("pilzext")}catch(e){}v=v||"auto";var b=innerHeight,H=b;
  if(v=="auto")H=navigator.standalone?Math.max(b,screen.height):b;else if(v=="lvh")H=mh("100lvh");else if(v=="fill")H=mh("-webkit-fill-available");else if(v=="screen")H=screen.height;else if(v=="p60")H=b+60;
  var e=Math.max(0,Math.min(150,H-b));document.documentElement.style.setProperty("--ext",e+"px");try{$("ex2").value=v}catch(x){}return e}
-function lay(){var v="a",c="#efece3";try{v=localStorage.getItem("pilzlay")||"a";c=localStorage.getItem("pilzbg")||c}catch(e){}var r=document.documentElement;r.className=v=="a"?"":"l"+v;r.style.setProperty("--bg",c);var m=document.querySelector("meta[name=theme-color]");if(m)m.content=c;try{$("lay").value=v;$("bgc").value=c}catch(e){}setTimeout(function(){map.invalidateSize()},50)}
+function lay(){var v="c",c="#efece3";try{v=localStorage.getItem("pilzlay")||"c";c=localStorage.getItem("pilzbg")||c}catch(e){}var r=document.documentElement;r.className=v=="a"?"":"l"+v;r.style.setProperty("--bg",c);var m=document.querySelector("meta[name=theme-color]");if(m)m.content=c;try{$("lay").value=v;$("bgc").value=c}catch(e){}setTimeout(function(){map.invalidateSize()},50)}
 $("lay").onchange=function(){try{localStorage.setItem("pilzlay",this.value)}catch(e){}lay()};$("bgc").onchange=function(){try{localStorage.setItem("pilzbg",this.value)}catch(e){}lay()};lay();
 $("ex2").onchange=function(){try{localStorage.setItem("pilzext",this.value)}catch(e){}extGap();map.invalidateSize();$("dbg").textContent="Verlängerung: "+extGap()+" px (Modus "+this.value+")"};
 ["load","resize","orientationchange"].forEach(function(ev){window.addEventListener(ev,function(){extGap()})});extGap();
