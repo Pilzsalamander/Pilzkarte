@@ -4,9 +4,12 @@
 <meta name="theme-color" content="#efece3"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Pilzkarte Schweiz</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-html,body{height:100%;margin:0;overflow:hidden;font:15px/1.4 system-ui,sans-serif;background:#efece3}
-.leaflet-container{background:#efece3}
+html,body{height:100%;margin:0;overflow:hidden;font:15px/1.4 system-ui,sans-serif;background:var(--bg,#efece3)}
+.leaflet-container{background:var(--bg,#efece3)}
 html{--ext:0px}
+html.lb body{position:fixed;top:0;left:0;right:0;bottom:0;height:auto}html.lb #map{position:absolute;top:0;left:0;right:0;bottom:calc(-1*var(--ext))}
+html.lc,html.lc body{height:auto;min-height:100%;overflow:visible}html.lc #map{position:absolute;top:0;left:0;width:100%;height:calc(100vh + var(--ext))}
+html.ld #map{transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0)}
 #map{position:fixed;top:0;left:0;right:0;bottom:calc(-1*var(--ext))}
 .leaflet-bottom{margin-bottom:env(safe-area-inset-bottom,0px)}
 body:before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:linear-gradient(#0005,#0000);z-index:1050;pointer-events:none}
@@ -43,6 +46,8 @@ table{border-collapse:collapse;width:100%;margin:6px 0;text-align:center;font-si
 <label class="ck"><input type="checkbox" id="mo"> Moore (BAFU-Inventar) einblenden</label>
 <small>Gilt für Standort-Info, Gebiete und Beste Stellen.</small>
 <label for="ex2">Unterer Rand: Kartenhöhe (bei Streifen unten der Reihe nach probieren)</label><select id="ex2"><option value="auto">Automatisch</option><option value="bottom">Standard (Rand unten)</option><option value="lvh">Grosse Höhe (lvh)</option><option value="fill">Verfügbare Höhe (fill-available)</option><option value="screen">Bildschirmhöhe</option><option value="p60">Fenster + 60 px</option></select>
+<label for="lay">Layout-Technik (Test)</label><select id="lay"><option value="a">A: Standard</option><option value="b">B: Seite fest verankert</option><option value="c">C: Normaler Fluss</option><option value="d">D: Eigene Grafikebene</option></select>
+<label for="bgc">Farbe des Randes</label><select id="bgc"><option value="#efece3">Beige</option><option value="#ffffff">Weiss</option><option value="#4f7a2e">Grün</option><option value="#c0392b">Rot (Test)</option></select>
 <p><small id="dbg"></small></p></section>
 <section id="gb" class="sh" hidden><header><span>Gute Gebiete</span><span><button id="gc" class="ib s" title="Schliessen" aria-label="Schliessen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></header>
 <label for="hs">Art</label><select id="hs"></select><label for="hd">Tag</label><select id="hd"></select>
@@ -209,6 +214,8 @@ $("tg").onclick=$("gc").onclick=function(){tog("gb")};function mh(c){var t=docum
 function extGap(){var v;try{v=localStorage.getItem("pilzext")}catch(e){}v=v||"auto";var b=innerHeight,H=b;
  if(v=="auto")H=navigator.standalone?Math.max(b,screen.height):b;else if(v=="lvh")H=mh("100lvh");else if(v=="fill")H=mh("-webkit-fill-available");else if(v=="screen")H=screen.height;else if(v=="p60")H=b+60;
  var e=Math.max(0,Math.min(150,H-b));document.documentElement.style.setProperty("--ext",e+"px");try{$("ex2").value=v}catch(x){}return e}
+function lay(){var v="a",c="#efece3";try{v=localStorage.getItem("pilzlay")||"a";c=localStorage.getItem("pilzbg")||c}catch(e){}var r=document.documentElement;r.className=v=="a"?"":"l"+v;r.style.setProperty("--bg",c);var m=document.querySelector("meta[name=theme-color]");if(m)m.content=c;try{$("lay").value=v;$("bgc").value=c}catch(e){}setTimeout(function(){map.invalidateSize()},50)}
+$("lay").onchange=function(){try{localStorage.setItem("pilzlay",this.value)}catch(e){}lay()};$("bgc").onchange=function(){try{localStorage.setItem("pilzbg",this.value)}catch(e){}lay()};lay();
 $("ex2").onchange=function(){try{localStorage.setItem("pilzext",this.value)}catch(e){}extGap();map.invalidateSize();$("dbg").textContent="Verlängerung: "+extGap()+" px (Modus "+this.value+")"};
 ["load","resize","orientationchange"].forEach(function(ev){window.addEventListener(ev,function(){extGap()})});extGap();
 $("ts").onclick=$("sc").onclick=function(){tog("set");var s=document.createElement("div");s.style.cssText="position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)";document.body.appendChild(s);var cs=getComputedStyle(s),t=parseInt(cs.paddingTop)||0,b=parseInt(cs.paddingBottom)||0;document.body.removeChild(s);$("dbg").textContent="Anzeige: "+(navigator.standalone?"Home-Bildschirm-App":"Browser")+" · Fenster "+innerWidth+"×"+innerHeight+(window.visualViewport?" (sichtbar "+Math.round(visualViewport.height)+")":"")+" · Rand oben "+t+" px, unten "+b+" px · Bildschirm "+screen.height+" · vh "+mh("100vh")+" lvh "+mh("100lvh")+" dvh "+mh("100dvh")+" fill "+mh("-webkit-fill-available")+" · Verlängerung "+extGap()+" px"};$("pc").onclick=function(){$("panel").hidden=true};
